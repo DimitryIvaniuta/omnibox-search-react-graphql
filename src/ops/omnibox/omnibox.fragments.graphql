@@ -1,0 +1,48 @@
+fragment SearchHitContactFields on SearchHitContact {
+    id
+    score
+    subtitle
+    title
+    contactId
+}
+
+fragment SearchHitListingFields on SearchHitListing {
+    id
+    score
+    subtitle
+    title
+    listingId
+    mlsId
+}
+
+fragment SearchHitMailingFields on SearchHitMailing {
+    id
+    score
+    subtitle
+    title
+    mailingId
+}
+
+fragment SearchHitProductFields on SearchHitProduct {
+    id
+    score
+    subtitle
+    title
+    productId
+}
+
+fragment SearchHitReferralFields on SearchHitReferral {
+    id
+    score
+    subtitle
+    title
+    referralId
+}
+
+fragment SearchHitTransactionFields on SearchHitTransaction {
+    id
+    score
+    subtitle
+    title
+    transactionId
+}

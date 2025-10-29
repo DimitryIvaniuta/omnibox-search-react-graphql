@@ -1,0 +1,23 @@
+# type Transaction {
+#   amount: Float, contactId: ID!, currency: String, id: ID!, listingId: ID!,
+#   status: String, subtitle: String, title: String!, version: Long!
+# }
+
+fragment TransactionListFields on Transaction {
+    id
+    title
+    status
+    amount
+}
+
+fragment TransactionDetails on Transaction {
+    id
+    title
+    subtitle
+    status
+    amount
+    currency
+    contactId
+    listingId
+    version
+}

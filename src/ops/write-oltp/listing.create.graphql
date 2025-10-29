@@ -1,0 +1,6 @@
+# input CreateListingInput { contactId: ID!, mlsId: String, subtitle: String, title: String! }
+mutation Listing_Create($input: CreateListingInput!) {
+    createListing(input: $input) {
+        ...ListingDetails
+    }
+}

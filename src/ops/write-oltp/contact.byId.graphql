@@ -1,0 +1,3 @@
+query Contact_ById($id: ID!) {
+    contact(id: $id) { ...ContactDetails }
+}

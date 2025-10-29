@@ -1,0 +1,17 @@
+# type Listing { contactId: ID!, id: ID!, mlsId: String, subtitle: String, title: String!, version: Long! }
+
+fragment ListingListFields on Listing {
+    id
+    title
+    mlsId
+    subtitle
+}
+
+fragment ListingDetails on Listing {
+    id
+    title
+    subtitle
+    mlsId
+    contactId
+    version
+}

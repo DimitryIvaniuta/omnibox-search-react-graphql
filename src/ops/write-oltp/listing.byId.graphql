@@ -1,0 +1,3 @@
+query Listing_ById($id: ID!) {
+    listing(id: $id) { ...ListingDetails }
+}

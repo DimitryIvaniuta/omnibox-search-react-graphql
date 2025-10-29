@@ -1,0 +1,5 @@
+query Transactions_Search($q: String!, $first: Int = 20) {
+    searchTransactions(q: $q, first: $first) {
+        ...TransactionListFields
+    }
+}

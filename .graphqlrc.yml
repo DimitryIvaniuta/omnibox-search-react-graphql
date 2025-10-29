@@ -1,0 +1,32 @@
+# .graphqlrc.yml
+# Central config for GraphQL tooling (VSCode GraphQL, graphql-cli, linters, etc.)
+# We use file-based SDL to avoid backend introspection depth limits.
+# We also expose HTTP endpoints (with env-based headers) for live queries in tools.
+
+projects:
+  omnibox:
+    schema:
+      # Adjust if your backend repo path differs:
+      - http://localhost:8080/graphql
+    documents:
+      - src/ops/omnibox/**/*.graphql
+    extensions:
+      endpoints:
+        dev:
+          url: http://localhost:8080/graphql
+          headers:
+            X-Tenant: admin
+            Content-Type: application/json
+
+  write-oltp:
+    schema:
+      - http://localhost:8081/graphql
+    documents:
+      - src/ops/write-oltp/**/*.graphql
+    extensions:
+      endpoints:
+        dev:
+          url: http://localhost:8081/graphql
+          headers:
+            X-Tenant: admin
+            Content-Type: application/json

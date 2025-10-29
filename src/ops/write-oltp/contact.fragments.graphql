@@ -1,0 +1,16 @@
+
+fragment ContactListFields on Contact {
+    id
+    fullName
+    email
+    label
+}
+
+fragment ContactDetails on Contact {
+    id
+    fullName
+    email
+    label
+    phone
+    version
+}

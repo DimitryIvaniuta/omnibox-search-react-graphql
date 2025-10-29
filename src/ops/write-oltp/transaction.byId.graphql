@@ -1,0 +1,3 @@
+query Transaction_ById($id: ID!) {
+    transaction(id: $id) { ...TransactionDetails }
+}

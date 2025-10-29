@@ -1,0 +1,6 @@
+# input UpdateContactInput { email: String!, fullName: String!, label: String, phone: String, version: Long! }
+mutation Contact_Update($id: ID!, $input: UpdateContactInput!) {
+    updateContact(id: $id, input: $input) {
+        ...ContactDetails
+    }
+}

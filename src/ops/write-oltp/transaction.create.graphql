@@ -1,0 +1,6 @@
+# input CreateTransactionInput { amount: Float, contactId: ID!, currency: String, listingId: ID!, status: String, subtitle: String, title: String! }
+mutation Transaction_Create($input: CreateTransactionInput!) {
+    createTransaction(input: $input) {
+        ...TransactionDetails
+    }
+}

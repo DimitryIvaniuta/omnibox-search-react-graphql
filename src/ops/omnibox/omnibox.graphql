@@ -1,0 +1,10 @@
+query Omnibox($q: String!, $limitPerGroup: Int = 5) {
+    omnibox(q: $q, limitPerGroup: $limitPerGroup) {
+        contacts { ...SearchHitContactFields }
+        listings { ...SearchHitListingFields }
+        mailings { ...SearchHitMailingFields }
+        products { ...SearchHitProductFields }
+        referrals { ...SearchHitReferralFields }
+        transactions { ...SearchHitTransactionFields }
+    }
+}
