@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
+const scalars = {
+    BigDecimal: 'import("decimal.js").Decimal',
+};
+
 /**
  * Generates typed documents for BOTH services:
  * - src/generated/omnibox/     (schema: VITE_OMNIBOX_URL)
@@ -30,7 +34,8 @@ const config: CodegenConfig = {
                     }
                 }
             ],
-            documents: ['src/ops/write-oltp/**/*.graphql']
+            documents: ['src/ops/write-oltp/**/*.graphql'],
+            config: { scalars }
         }
     }
 };

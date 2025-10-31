@@ -1,0 +1,4 @@
+# delete
+mutation DeleteContacts($ids: [ID!]!) {
+    deleteContacts(ids: $ids)
+}

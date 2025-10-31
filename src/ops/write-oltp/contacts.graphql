@@ -1,0 +1,6 @@
+# list
+query Contacts($offset: Int = 0, $limit: Int = 50) {
+    contacts(offset: $offset, limit: $limit) {
+        ...ContactDetails
+    }
+}

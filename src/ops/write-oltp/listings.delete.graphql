@@ -1,0 +1,1 @@
+mutation DeleteListings($ids: [ID!]!) { deleteListings(ids: $ids) }

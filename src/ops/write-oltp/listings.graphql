@@ -1,0 +1,10 @@
+
+query Listings($offset: Int = 0, $limit: Int = 50) {
+    listings(offset: $offset, limit: $limit) {
+        ...ListingDetails
+    }
+}
+query ListingById($id: ID!) {
+    listingById(id: $id) { ...ListingDetails }
+}
+
