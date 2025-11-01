@@ -2,15 +2,9 @@ query Transactions($offset: Int = 0, $limit: Int = 50) {
     transactions(offset: $offset, limit: $limit) {
         id
         status
-        total
+        total { amount currency }
     }
 }
 query TransactionById($id: ID!) {
-    transactionById(id: $id) { id status total }
-}
-mutation CreateTransaction($input: CreateTransactionInput!) {
-    createTransaction(input: $input) { id }
-}
-mutation UpdateTransaction($id: ID!, $input: UpdateTransactionInput!) {
-    updateTransaction(id: $id, input: $input) { id }
+    transactionById(id: $id) { id status total { amount currency } }
 }

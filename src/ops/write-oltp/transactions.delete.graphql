@@ -1,1 +1,3 @@
 mutation DeleteTransactions($ids: [ID!]!) { deleteTransactions(ids: $ids) }
+
+
