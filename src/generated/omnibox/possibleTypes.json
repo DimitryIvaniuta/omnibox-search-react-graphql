@@ -1,0 +1,12 @@
+{
+  "possibleTypes": {
+    "SearchHit": [
+      "SearchHitContact",
+      "SearchHitListing",
+      "SearchHitMailing",
+      "SearchHitProduct",
+      "SearchHitReferral",
+      "SearchHitTransaction"
+    ]
+  }
+}

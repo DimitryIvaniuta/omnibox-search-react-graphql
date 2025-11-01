@@ -1,0 +1,84 @@
+overwrite: true
+
+generates:
+  # ================= OMNIBOX =================
+  src/generated/omnibox/graphql.tsx:
+    schema:
+      - ${VITE_OMNIBOX_URL}:
+          headers:
+            X-Tenant: ${VITE_TENANT}
+    documents:
+      - src/ops/omnibox/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withHooks: true
+      withHOC: false
+      withComponent: false
+      reactApolloVersion: 3
+      useTypeImports: true
+      apolloReactHooksImportFrom: "@apollo/client"
+      apolloReactCommonImportFrom: "@apollo/client"
+      scalars:
+        BigDecimal: 'import("decimal.js").Decimal'
+
+  src/generated/omnibox/graphql.schema.json:
+    schema:
+      - ${VITE_OMNIBOX_URL}:
+          headers:
+            X-Tenant: ${VITE_TENANT}
+    plugins:
+      - introspection
+
+  src/generated/omnibox/possibleTypes.json:
+    schema:
+      - ${VITE_OMNIBOX_URL}:
+          headers:
+            X-Tenant: ${VITE_TENANT}
+    plugins:
+      - fragment-matcher
+    config:
+      apolloClientVersion: 3
+
+  # ================= WRITE-OLTP =================
+  src/generated/write-oltp/graphql.tsx:
+    schema:
+      - ${VITE_WRITE_OLTP_URL}:
+          headers:
+            X-Tenant: ${VITE_TENANT}
+    documents:
+      - src/ops/write-oltp/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withHooks: true
+      withHOC: false
+      withComponent: false
+      reactApolloVersion: 3
+      useTypeImports: true
+      apolloReactHooksImportFrom: "@apollo/client"
+      apolloReactCommonImportFrom: "@apollo/client"
+      scalars:
+        BigDecimal: 'import("decimal.js").Decimal'
+
+  src/generated/write-oltp/graphql.schema.json:
+    schema:
+      - ${VITE_WRITE_OLTP_URL}:
+          headers:
+            X-Tenant: ${VITE_TENANT}
+    plugins:
+      - introspection
+
+  src/generated/write-oltp/possibleTypes.json:
+    schema:
+      - ${VITE_WRITE_OLTP_URL}:
+          headers:
+            X-Tenant: ${VITE_TENANT}
+    plugins:
+      - fragment-matcher
+    config:
+      apolloClientVersion: 3
