@@ -1,10 +1,14 @@
 query Transactions($offset: Int = 0, $limit: Int = 50) {
     transactions(offset: $offset, limit: $limit) {
         id
+        title
+        subtitle
+        contactId
+        listingId
         status
         total { amount currency }
     }
 }
-query TransactionById($id: ID!) {
+query TransactionByIdOne($id: ID!) {
     transactionById(id: $id) { id status total { amount currency } }
 }

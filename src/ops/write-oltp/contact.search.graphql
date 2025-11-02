@@ -1,5 +1,5 @@
 # For grid (search endpoint returns simple list)
-query Contacts_Search($q: String!, $first: Int = 20) {
+query ContactsSearch($q: String!, $first: Int = 20) {
     searchContacts(q: $q, first: $first) {
         ...ContactListFields
     }

@@ -8,10 +8,11 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "codegen": "dotenv -e .env.codegen -- graphql-codegen --config codegen.yml"
+    "codegen": "dotenv -e .env.codegen -- graphql-codegen --config codegen.yml",
+    "precommit:guard": "git diff --cached --name-only | findstr /R \".*\\.(ts|tsx)$\" | findstr /V /R \"^$\" > files.tmp && (for /F %f in (files.tmp) do findstr /R \"graphql\\s*\\(\" %f && exit /B 1) || exit /B 0"
   },
   "dependencies": {
-    "@apollo/client": "^4.0.9",
+    "@apollo/client": "~3.14.0",
     "@graphql-typed-document-node/core": "^3.2.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",

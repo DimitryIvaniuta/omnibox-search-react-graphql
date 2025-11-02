@@ -1,5 +1,5 @@
 # input UpdateListingInput { contactId: ID, subtitle: String, title: String!, version: Long! }
-mutation Listing_Update($id: ID!, $input: UpdateListingInput!) {
+mutation ListingUpdate($id: ID!, $input: UpdateListingInput!) {
     updateListing(id: $id, input: $input) {
         ...ListingDetails
     }

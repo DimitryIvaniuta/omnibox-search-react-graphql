@@ -1,4 +1,4 @@
-query Listings_Search($q: String!, $first: Int = 20) {
+query ListingsSearch($q: String!, $first: Int = 20) {
     searchListings(q: $q, first: $first) {
         ...ListingListFields
     }

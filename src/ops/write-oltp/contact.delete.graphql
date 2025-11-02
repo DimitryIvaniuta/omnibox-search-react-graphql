@@ -1,4 +1,4 @@
 # Single delete per schema (bulk = client-side loop)
-mutation Contact_Delete($id: ID!, $version: Long!) {
+mutation ContactDelete($id: ID!, $version: Long!) {
     deleteContact(id: $id, version: $version)
 }

@@ -5,6 +5,7 @@ fragment ListingListFields on Listing {
     title
     mlsId
     subtitle
+    price { amount currency }
 }
 
 fragment ListingDetails on Listing {
@@ -14,4 +15,5 @@ fragment ListingDetails on Listing {
     mlsId
     contactId
     version
+    price { amount currency }
 }

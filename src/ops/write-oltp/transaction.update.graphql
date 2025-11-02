@@ -1,5 +1,5 @@
 # input UpdateTransactionInput { amount: Float, contactId: ID, currency: String, listingId: ID, status: String, subtitle: String, title: String!, version: Long! }
-mutation Transaction_Update($id: ID!, $input: UpdateTransactionInput!) {
+mutation TransactionUpdate($id: ID!, $input: UpdateTransactionInput!) {
     updateTransaction(id: $id, input: $input) {
         ...TransactionDetails
     }

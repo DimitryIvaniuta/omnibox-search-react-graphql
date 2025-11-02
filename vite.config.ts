@@ -9,6 +9,7 @@ export default defineConfig({
     react({ jsxRuntime: "automatic" }),
     checker({ typescript: { tsconfigPath: "./tsconfig.json" } }),
   ],
+  clearScreen: false,
   resolve: {
     alias: { "@": path.resolve(__dirname, "src") },
   },

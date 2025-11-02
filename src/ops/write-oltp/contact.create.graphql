@@ -1,5 +1,5 @@
 # input CreateContactInput { email: String!, fullName: String!, label: String, phone: String }
-mutation Contact_Create($input: CreateContactInput!) {
+mutation ContactCreate($input: CreateContactInput!) {
     createContact(input: $input) {
         ...ContactDetails
     }

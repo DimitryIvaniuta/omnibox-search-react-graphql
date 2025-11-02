@@ -1,0 +1,2 @@
+@use "bootstrap/scss/bootstrap" as *;
+@use "../styles/core.scss" as *; // if you want to override via variables, import before bootstrap build

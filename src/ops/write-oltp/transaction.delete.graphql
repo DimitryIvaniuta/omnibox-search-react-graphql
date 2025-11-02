@@ -1,3 +1,3 @@
-mutation Transaction_Delete($id: ID!, $version: Long!) {
+mutation TransactionDelete($id: ID!, $version: Long!) {
     deleteTransaction(id: $id, version: $version)
 }

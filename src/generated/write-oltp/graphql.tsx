@@ -256,6 +256,8 @@ export type UpdateContactInput = {
 
 export type UpdateListingInput = {
   contactId?: InputMaybe<Scalars['ID']['input']>;
+  mlsId?: InputMaybe<Scalars['String']['input']>;
+  price: MoneyInput;
   subtitle?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
   version: Scalars['Long']['input'];
@@ -271,47 +273,47 @@ export type UpdateTransactionInput = {
   version: Scalars['Long']['input'];
 };
 
-export type Contact_ByIdQueryVariables = Exact<{
+export type ContactByIdQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type Contact_ByIdQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any } | null };
+export type ContactByIdQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any } | null };
 
-export type Contact_CreateMutationVariables = Exact<{
+export type ContactCreateMutationVariables = Exact<{
   input: CreateContactInput;
 }>;
 
 
-export type Contact_CreateMutation = { __typename?: 'Mutation', createContact: { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any } };
+export type ContactCreateMutation = { __typename?: 'Mutation', createContact: { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any } };
 
-export type Contact_DeleteMutationVariables = Exact<{
+export type ContactDeleteMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   version: Scalars['Long']['input'];
 }>;
 
 
-export type Contact_DeleteMutation = { __typename?: 'Mutation', deleteContact: boolean };
+export type ContactDeleteMutation = { __typename?: 'Mutation', deleteContact: boolean };
 
 export type ContactListFieldsFragment = { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null };
 
 export type ContactDetailsFragment = { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any };
 
-export type Contacts_SearchQueryVariables = Exact<{
+export type ContactsSearchQueryVariables = Exact<{
   q: Scalars['String']['input'];
   first?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type Contacts_SearchQuery = { __typename?: 'Query', searchContacts: Array<{ __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null }> };
+export type ContactsSearchQuery = { __typename?: 'Query', searchContacts: Array<{ __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null }> };
 
-export type Contact_UpdateMutationVariables = Exact<{
+export type ContactUpdateMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   input: UpdateContactInput;
 }>;
 
 
-export type Contact_UpdateMutation = { __typename?: 'Mutation', updateContact: { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any } };
+export type ContactUpdateMutation = { __typename?: 'Mutation', updateContact: { __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any } };
 
 export type DeleteContactsMutationVariables = Exact<{
   ids: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
@@ -328,47 +330,47 @@ export type ContactsQueryVariables = Exact<{
 
 export type ContactsQuery = { __typename?: 'Query', contacts: Array<{ __typename?: 'Contact', id: string, fullName: string, email: string, label?: string | null, phone?: string | null, version: any }> };
 
-export type Listing_ByIdQueryVariables = Exact<{
+export type ListingByIdQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type Listing_ByIdQuery = { __typename?: 'Query', listing?: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any } | null };
+export type ListingByIdQuery = { __typename?: 'Query', listing?: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } | null };
 
-export type Listing_CreateMutationVariables = Exact<{
+export type ListingCreateMutationVariables = Exact<{
   input: CreateListingInput;
 }>;
 
 
-export type Listing_CreateMutation = { __typename?: 'Mutation', createListing: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any } };
+export type ListingCreateMutation = { __typename?: 'Mutation', createListing: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } };
 
-export type Listing_DeleteMutationVariables = Exact<{
+export type ListingDeleteMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   version: Scalars['Long']['input'];
 }>;
 
 
-export type Listing_DeleteMutation = { __typename?: 'Mutation', deleteListing: boolean };
+export type ListingDeleteMutation = { __typename?: 'Mutation', deleteListing: boolean };
 
-export type ListingListFieldsFragment = { __typename?: 'Listing', id: string, title: string, mlsId?: string | null, subtitle?: string | null };
+export type ListingListFieldsFragment = { __typename?: 'Listing', id: string, title: string, mlsId?: string | null, subtitle?: string | null, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } };
 
-export type ListingDetailsFragment = { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any };
+export type ListingDetailsFragment = { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } };
 
-export type Listings_SearchQueryVariables = Exact<{
+export type ListingsSearchQueryVariables = Exact<{
   q: Scalars['String']['input'];
   first?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type Listings_SearchQuery = { __typename?: 'Query', searchListings: Array<{ __typename?: 'Listing', id: string, title: string, mlsId?: string | null, subtitle?: string | null }> };
+export type ListingsSearchQuery = { __typename?: 'Query', searchListings: Array<{ __typename?: 'Listing', id: string, title: string, mlsId?: string | null, subtitle?: string | null, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } }> };
 
-export type Listing_UpdateMutationVariables = Exact<{
+export type ListingUpdateMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   input: UpdateListingInput;
 }>;
 
 
-export type Listing_UpdateMutation = { __typename?: 'Mutation', updateListing: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any } };
+export type ListingUpdateMutation = { __typename?: 'Mutation', updateListing: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } };
 
 export type DeleteListingsMutationVariables = Exact<{
   ids: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
@@ -383,56 +385,56 @@ export type ListingsQueryVariables = Exact<{
 }>;
 
 
-export type ListingsQuery = { __typename?: 'Query', listings: Array<{ __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any }> };
+export type ListingsQuery = { __typename?: 'Query', listings: Array<{ __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } }> };
 
-export type ListingByIdQueryVariables = Exact<{
+export type ListingByIdOneQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type ListingByIdQuery = { __typename?: 'Query', listingById?: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any } | null };
+export type ListingByIdOneQuery = { __typename?: 'Query', listingById?: { __typename?: 'Listing', id: string, title: string, subtitle?: string | null, mlsId?: string | null, contactId: string, version: any, price: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } | null };
 
-export type Transaction_ByIdQueryVariables = Exact<{
+export type TransactionByIdQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type Transaction_ByIdQuery = { __typename?: 'Query', transaction?: { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } | null };
+export type TransactionByIdQuery = { __typename?: 'Query', transaction?: { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } | null };
 
-export type Transaction_CreateMutationVariables = Exact<{
+export type TransactionCreateMutationVariables = Exact<{
   input: CreateTransactionInput;
 }>;
 
 
-export type Transaction_CreateMutation = { __typename?: 'Mutation', createTransaction: { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } };
+export type TransactionCreateMutation = { __typename?: 'Mutation', createTransaction: { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } };
 
-export type Transaction_DeleteMutationVariables = Exact<{
+export type TransactionDeleteMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   version: Scalars['Long']['input'];
 }>;
 
 
-export type Transaction_DeleteMutation = { __typename?: 'Mutation', deleteTransaction: boolean };
+export type TransactionDeleteMutation = { __typename?: 'Mutation', deleteTransaction: boolean };
 
 export type TransactionListFieldsFragment = { __typename?: 'Transaction', id: string, title: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } };
 
 export type TransactionDetailsFragment = { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } };
 
-export type Transactions_SearchQueryVariables = Exact<{
+export type TransactionsSearchQueryVariables = Exact<{
   q: Scalars['String']['input'];
   first?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type Transactions_SearchQuery = { __typename?: 'Query', searchTransactions: Array<{ __typename?: 'Transaction', id: string, title: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } }> };
+export type TransactionsSearchQuery = { __typename?: 'Query', searchTransactions: Array<{ __typename?: 'Transaction', id: string, title: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } }> };
 
-export type Transaction_UpdateMutationVariables = Exact<{
+export type TransactionUpdateMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   input: UpdateTransactionInput;
 }>;
 
 
-export type Transaction_UpdateMutation = { __typename?: 'Mutation', updateTransaction: { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } };
+export type TransactionUpdateMutation = { __typename?: 'Mutation', updateTransaction: { __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, status?: string | null, contactId: string, listingId: string, version: any, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } };
 
 export type DeleteTransactionsMutationVariables = Exact<{
   ids: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
@@ -447,14 +449,14 @@ export type TransactionsQueryVariables = Exact<{
 }>;
 
 
-export type TransactionsQuery = { __typename?: 'Query', transactions: Array<{ __typename?: 'Transaction', id: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } }> };
+export type TransactionsQuery = { __typename?: 'Query', transactions: Array<{ __typename?: 'Transaction', id: string, title: string, subtitle?: string | null, contactId: string, listingId: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } }> };
 
-export type TransactionByIdQueryVariables = Exact<{
+export type TransactionByIdOneQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type TransactionByIdQuery = { __typename?: 'Query', transactionById?: { __typename?: 'Transaction', id: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } | null };
+export type TransactionByIdOneQuery = { __typename?: 'Query', transactionById?: { __typename?: 'Transaction', id: string, status?: string | null, total: { __typename?: 'Money', amount: import("decimal.js").Decimal, currency: string } } | null };
 
 export const ContactListFieldsFragmentDoc = gql`
     fragment ContactListFields on Contact {
@@ -480,6 +482,10 @@ export const ListingListFieldsFragmentDoc = gql`
   title
   mlsId
   subtitle
+  price {
+    amount
+    currency
+  }
 }
     `;
 export const ListingDetailsFragmentDoc = gql`
@@ -490,6 +496,10 @@ export const ListingDetailsFragmentDoc = gql`
   mlsId
   contactId
   version
+  price {
+    amount
+    currency
+  }
 }
     `;
 export const TransactionListFieldsFragmentDoc = gql`
@@ -518,8 +528,8 @@ export const TransactionDetailsFragmentDoc = gql`
   version
 }
     `;
-export const Contact_ByIdDocument = gql`
-    query Contact_ById($id: ID!) {
+export const ContactByIdDocument = gql`
+    query ContactById($id: ID!) {
   contact(id: $id) {
     ...ContactDetails
   }
@@ -527,104 +537,104 @@ export const Contact_ByIdDocument = gql`
     ${ContactDetailsFragmentDoc}`;
 
 /**
- * __useContact_ByIdQuery__
+ * __useContactByIdQuery__
  *
- * To run a query within a React component, call `useContact_ByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useContact_ByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useContactByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useContactByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useContact_ByIdQuery({
+ * const { data, loading, error } = useContactByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useContact_ByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<Contact_ByIdQuery, Contact_ByIdQueryVariables> & ({ variables: Contact_ByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useContactByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ContactByIdQuery, ContactByIdQueryVariables> & ({ variables: ContactByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<Contact_ByIdQuery, Contact_ByIdQueryVariables>(Contact_ByIdDocument, options);
+        return ApolloReactHooks.useQuery<ContactByIdQuery, ContactByIdQueryVariables>(ContactByIdDocument, options);
       }
-export function useContact_ByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Contact_ByIdQuery, Contact_ByIdQueryVariables>) {
+export function useContactByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ContactByIdQuery, ContactByIdQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<Contact_ByIdQuery, Contact_ByIdQueryVariables>(Contact_ByIdDocument, options);
+          return ApolloReactHooks.useLazyQuery<ContactByIdQuery, ContactByIdQueryVariables>(ContactByIdDocument, options);
         }
-export function useContact_ByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Contact_ByIdQuery, Contact_ByIdQueryVariables>) {
+export function useContactByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ContactByIdQuery, ContactByIdQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Contact_ByIdQuery, Contact_ByIdQueryVariables>(Contact_ByIdDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<ContactByIdQuery, ContactByIdQueryVariables>(ContactByIdDocument, options);
         }
-export type Contact_ByIdQueryHookResult = ReturnType<typeof useContact_ByIdQuery>;
-export type Contact_ByIdLazyQueryHookResult = ReturnType<typeof useContact_ByIdLazyQuery>;
-export type Contact_ByIdSuspenseQueryHookResult = ReturnType<typeof useContact_ByIdSuspenseQuery>;
-export type Contact_ByIdQueryResult = ApolloReactCommon.QueryResult<Contact_ByIdQuery, Contact_ByIdQueryVariables>;
-export const Contact_CreateDocument = gql`
-    mutation Contact_Create($input: CreateContactInput!) {
+export type ContactByIdQueryHookResult = ReturnType<typeof useContactByIdQuery>;
+export type ContactByIdLazyQueryHookResult = ReturnType<typeof useContactByIdLazyQuery>;
+export type ContactByIdSuspenseQueryHookResult = ReturnType<typeof useContactByIdSuspenseQuery>;
+export type ContactByIdQueryResult = ApolloReactCommon.QueryResult<ContactByIdQuery, ContactByIdQueryVariables>;
+export const ContactCreateDocument = gql`
+    mutation ContactCreate($input: CreateContactInput!) {
   createContact(input: $input) {
     ...ContactDetails
   }
 }
     ${ContactDetailsFragmentDoc}`;
-export type Contact_CreateMutationFn = ApolloReactCommon.MutationFunction<Contact_CreateMutation, Contact_CreateMutationVariables>;
+export type ContactCreateMutationFn = ApolloReactCommon.MutationFunction<ContactCreateMutation, ContactCreateMutationVariables>;
 
 /**
- * __useContact_CreateMutation__
+ * __useContactCreateMutation__
  *
- * To run a mutation, you first call `useContact_CreateMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useContact_CreateMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useContactCreateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useContactCreateMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [contactCreateMutation, { data, loading, error }] = useContact_CreateMutation({
+ * const [contactCreateMutation, { data, loading, error }] = useContactCreateMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useContact_CreateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Contact_CreateMutation, Contact_CreateMutationVariables>) {
+export function useContactCreateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ContactCreateMutation, ContactCreateMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Contact_CreateMutation, Contact_CreateMutationVariables>(Contact_CreateDocument, options);
+        return ApolloReactHooks.useMutation<ContactCreateMutation, ContactCreateMutationVariables>(ContactCreateDocument, options);
       }
-export type Contact_CreateMutationHookResult = ReturnType<typeof useContact_CreateMutation>;
-export type Contact_CreateMutationResult = ApolloReactCommon.MutationResult<Contact_CreateMutation>;
-export type Contact_CreateMutationOptions = ApolloReactCommon.BaseMutationOptions<Contact_CreateMutation, Contact_CreateMutationVariables>;
-export const Contact_DeleteDocument = gql`
-    mutation Contact_Delete($id: ID!, $version: Long!) {
+export type ContactCreateMutationHookResult = ReturnType<typeof useContactCreateMutation>;
+export type ContactCreateMutationResult = ApolloReactCommon.MutationResult<ContactCreateMutation>;
+export type ContactCreateMutationOptions = ApolloReactCommon.BaseMutationOptions<ContactCreateMutation, ContactCreateMutationVariables>;
+export const ContactDeleteDocument = gql`
+    mutation ContactDelete($id: ID!, $version: Long!) {
   deleteContact(id: $id, version: $version)
 }
     `;
-export type Contact_DeleteMutationFn = ApolloReactCommon.MutationFunction<Contact_DeleteMutation, Contact_DeleteMutationVariables>;
+export type ContactDeleteMutationFn = ApolloReactCommon.MutationFunction<ContactDeleteMutation, ContactDeleteMutationVariables>;
 
 /**
- * __useContact_DeleteMutation__
+ * __useContactDeleteMutation__
  *
- * To run a mutation, you first call `useContact_DeleteMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useContact_DeleteMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useContactDeleteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useContactDeleteMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [contactDeleteMutation, { data, loading, error }] = useContact_DeleteMutation({
+ * const [contactDeleteMutation, { data, loading, error }] = useContactDeleteMutation({
  *   variables: {
  *      id: // value for 'id'
  *      version: // value for 'version'
  *   },
  * });
  */
-export function useContact_DeleteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Contact_DeleteMutation, Contact_DeleteMutationVariables>) {
+export function useContactDeleteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ContactDeleteMutation, ContactDeleteMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Contact_DeleteMutation, Contact_DeleteMutationVariables>(Contact_DeleteDocument, options);
+        return ApolloReactHooks.useMutation<ContactDeleteMutation, ContactDeleteMutationVariables>(ContactDeleteDocument, options);
       }
-export type Contact_DeleteMutationHookResult = ReturnType<typeof useContact_DeleteMutation>;
-export type Contact_DeleteMutationResult = ApolloReactCommon.MutationResult<Contact_DeleteMutation>;
-export type Contact_DeleteMutationOptions = ApolloReactCommon.BaseMutationOptions<Contact_DeleteMutation, Contact_DeleteMutationVariables>;
-export const Contacts_SearchDocument = gql`
-    query Contacts_Search($q: String!, $first: Int = 20) {
+export type ContactDeleteMutationHookResult = ReturnType<typeof useContactDeleteMutation>;
+export type ContactDeleteMutationResult = ApolloReactCommon.MutationResult<ContactDeleteMutation>;
+export type ContactDeleteMutationOptions = ApolloReactCommon.BaseMutationOptions<ContactDeleteMutation, ContactDeleteMutationVariables>;
+export const ContactsSearchDocument = gql`
+    query ContactsSearch($q: String!, $first: Int = 20) {
   searchContacts(q: $q, first: $first) {
     ...ContactListFields
   }
@@ -632,72 +642,72 @@ export const Contacts_SearchDocument = gql`
     ${ContactListFieldsFragmentDoc}`;
 
 /**
- * __useContacts_SearchQuery__
+ * __useContactsSearchQuery__
  *
- * To run a query within a React component, call `useContacts_SearchQuery` and pass it any options that fit your needs.
- * When your component renders, `useContacts_SearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useContactsSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useContactsSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useContacts_SearchQuery({
+ * const { data, loading, error } = useContactsSearchQuery({
  *   variables: {
  *      q: // value for 'q'
  *      first: // value for 'first'
  *   },
  * });
  */
-export function useContacts_SearchQuery(baseOptions: ApolloReactHooks.QueryHookOptions<Contacts_SearchQuery, Contacts_SearchQueryVariables> & ({ variables: Contacts_SearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useContactsSearchQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ContactsSearchQuery, ContactsSearchQueryVariables> & ({ variables: ContactsSearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<Contacts_SearchQuery, Contacts_SearchQueryVariables>(Contacts_SearchDocument, options);
+        return ApolloReactHooks.useQuery<ContactsSearchQuery, ContactsSearchQueryVariables>(ContactsSearchDocument, options);
       }
-export function useContacts_SearchLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Contacts_SearchQuery, Contacts_SearchQueryVariables>) {
+export function useContactsSearchLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ContactsSearchQuery, ContactsSearchQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<Contacts_SearchQuery, Contacts_SearchQueryVariables>(Contacts_SearchDocument, options);
+          return ApolloReactHooks.useLazyQuery<ContactsSearchQuery, ContactsSearchQueryVariables>(ContactsSearchDocument, options);
         }
-export function useContacts_SearchSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Contacts_SearchQuery, Contacts_SearchQueryVariables>) {
+export function useContactsSearchSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ContactsSearchQuery, ContactsSearchQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Contacts_SearchQuery, Contacts_SearchQueryVariables>(Contacts_SearchDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<ContactsSearchQuery, ContactsSearchQueryVariables>(ContactsSearchDocument, options);
         }
-export type Contacts_SearchQueryHookResult = ReturnType<typeof useContacts_SearchQuery>;
-export type Contacts_SearchLazyQueryHookResult = ReturnType<typeof useContacts_SearchLazyQuery>;
-export type Contacts_SearchSuspenseQueryHookResult = ReturnType<typeof useContacts_SearchSuspenseQuery>;
-export type Contacts_SearchQueryResult = ApolloReactCommon.QueryResult<Contacts_SearchQuery, Contacts_SearchQueryVariables>;
-export const Contact_UpdateDocument = gql`
-    mutation Contact_Update($id: ID!, $input: UpdateContactInput!) {
+export type ContactsSearchQueryHookResult = ReturnType<typeof useContactsSearchQuery>;
+export type ContactsSearchLazyQueryHookResult = ReturnType<typeof useContactsSearchLazyQuery>;
+export type ContactsSearchSuspenseQueryHookResult = ReturnType<typeof useContactsSearchSuspenseQuery>;
+export type ContactsSearchQueryResult = ApolloReactCommon.QueryResult<ContactsSearchQuery, ContactsSearchQueryVariables>;
+export const ContactUpdateDocument = gql`
+    mutation ContactUpdate($id: ID!, $input: UpdateContactInput!) {
   updateContact(id: $id, input: $input) {
     ...ContactDetails
   }
 }
     ${ContactDetailsFragmentDoc}`;
-export type Contact_UpdateMutationFn = ApolloReactCommon.MutationFunction<Contact_UpdateMutation, Contact_UpdateMutationVariables>;
+export type ContactUpdateMutationFn = ApolloReactCommon.MutationFunction<ContactUpdateMutation, ContactUpdateMutationVariables>;
 
 /**
- * __useContact_UpdateMutation__
+ * __useContactUpdateMutation__
  *
- * To run a mutation, you first call `useContact_UpdateMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useContact_UpdateMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useContactUpdateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useContactUpdateMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [contactUpdateMutation, { data, loading, error }] = useContact_UpdateMutation({
+ * const [contactUpdateMutation, { data, loading, error }] = useContactUpdateMutation({
  *   variables: {
  *      id: // value for 'id'
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useContact_UpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Contact_UpdateMutation, Contact_UpdateMutationVariables>) {
+export function useContactUpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ContactUpdateMutation, ContactUpdateMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Contact_UpdateMutation, Contact_UpdateMutationVariables>(Contact_UpdateDocument, options);
+        return ApolloReactHooks.useMutation<ContactUpdateMutation, ContactUpdateMutationVariables>(ContactUpdateDocument, options);
       }
-export type Contact_UpdateMutationHookResult = ReturnType<typeof useContact_UpdateMutation>;
-export type Contact_UpdateMutationResult = ApolloReactCommon.MutationResult<Contact_UpdateMutation>;
-export type Contact_UpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<Contact_UpdateMutation, Contact_UpdateMutationVariables>;
+export type ContactUpdateMutationHookResult = ReturnType<typeof useContactUpdateMutation>;
+export type ContactUpdateMutationResult = ApolloReactCommon.MutationResult<ContactUpdateMutation>;
+export type ContactUpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<ContactUpdateMutation, ContactUpdateMutationVariables>;
 export const DeleteContactsDocument = gql`
     mutation DeleteContacts($ids: [ID!]!) {
   deleteContacts(ids: $ids)
@@ -770,8 +780,8 @@ export type ContactsQueryHookResult = ReturnType<typeof useContactsQuery>;
 export type ContactsLazyQueryHookResult = ReturnType<typeof useContactsLazyQuery>;
 export type ContactsSuspenseQueryHookResult = ReturnType<typeof useContactsSuspenseQuery>;
 export type ContactsQueryResult = ApolloReactCommon.QueryResult<ContactsQuery, ContactsQueryVariables>;
-export const Listing_ByIdDocument = gql`
-    query Listing_ById($id: ID!) {
+export const ListingByIdDocument = gql`
+    query ListingById($id: ID!) {
   listing(id: $id) {
     ...ListingDetails
   }
@@ -779,104 +789,104 @@ export const Listing_ByIdDocument = gql`
     ${ListingDetailsFragmentDoc}`;
 
 /**
- * __useListing_ByIdQuery__
+ * __useListingByIdQuery__
  *
- * To run a query within a React component, call `useListing_ByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useListing_ByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useListingByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useListing_ByIdQuery({
+ * const { data, loading, error } = useListingByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useListing_ByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<Listing_ByIdQuery, Listing_ByIdQueryVariables> & ({ variables: Listing_ByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useListingByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ListingByIdQuery, ListingByIdQueryVariables> & ({ variables: ListingByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<Listing_ByIdQuery, Listing_ByIdQueryVariables>(Listing_ByIdDocument, options);
+        return ApolloReactHooks.useQuery<ListingByIdQuery, ListingByIdQueryVariables>(ListingByIdDocument, options);
       }
-export function useListing_ByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Listing_ByIdQuery, Listing_ByIdQueryVariables>) {
+export function useListingByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ListingByIdQuery, ListingByIdQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<Listing_ByIdQuery, Listing_ByIdQueryVariables>(Listing_ByIdDocument, options);
+          return ApolloReactHooks.useLazyQuery<ListingByIdQuery, ListingByIdQueryVariables>(ListingByIdDocument, options);
         }
-export function useListing_ByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Listing_ByIdQuery, Listing_ByIdQueryVariables>) {
+export function useListingByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ListingByIdQuery, ListingByIdQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Listing_ByIdQuery, Listing_ByIdQueryVariables>(Listing_ByIdDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<ListingByIdQuery, ListingByIdQueryVariables>(ListingByIdDocument, options);
         }
-export type Listing_ByIdQueryHookResult = ReturnType<typeof useListing_ByIdQuery>;
-export type Listing_ByIdLazyQueryHookResult = ReturnType<typeof useListing_ByIdLazyQuery>;
-export type Listing_ByIdSuspenseQueryHookResult = ReturnType<typeof useListing_ByIdSuspenseQuery>;
-export type Listing_ByIdQueryResult = ApolloReactCommon.QueryResult<Listing_ByIdQuery, Listing_ByIdQueryVariables>;
-export const Listing_CreateDocument = gql`
-    mutation Listing_Create($input: CreateListingInput!) {
+export type ListingByIdQueryHookResult = ReturnType<typeof useListingByIdQuery>;
+export type ListingByIdLazyQueryHookResult = ReturnType<typeof useListingByIdLazyQuery>;
+export type ListingByIdSuspenseQueryHookResult = ReturnType<typeof useListingByIdSuspenseQuery>;
+export type ListingByIdQueryResult = ApolloReactCommon.QueryResult<ListingByIdQuery, ListingByIdQueryVariables>;
+export const ListingCreateDocument = gql`
+    mutation ListingCreate($input: CreateListingInput!) {
   createListing(input: $input) {
     ...ListingDetails
   }
 }
     ${ListingDetailsFragmentDoc}`;
-export type Listing_CreateMutationFn = ApolloReactCommon.MutationFunction<Listing_CreateMutation, Listing_CreateMutationVariables>;
+export type ListingCreateMutationFn = ApolloReactCommon.MutationFunction<ListingCreateMutation, ListingCreateMutationVariables>;
 
 /**
- * __useListing_CreateMutation__
+ * __useListingCreateMutation__
  *
- * To run a mutation, you first call `useListing_CreateMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useListing_CreateMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useListingCreateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useListingCreateMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [listingCreateMutation, { data, loading, error }] = useListing_CreateMutation({
+ * const [listingCreateMutation, { data, loading, error }] = useListingCreateMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useListing_CreateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Listing_CreateMutation, Listing_CreateMutationVariables>) {
+export function useListingCreateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ListingCreateMutation, ListingCreateMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Listing_CreateMutation, Listing_CreateMutationVariables>(Listing_CreateDocument, options);
+        return ApolloReactHooks.useMutation<ListingCreateMutation, ListingCreateMutationVariables>(ListingCreateDocument, options);
       }
-export type Listing_CreateMutationHookResult = ReturnType<typeof useListing_CreateMutation>;
-export type Listing_CreateMutationResult = ApolloReactCommon.MutationResult<Listing_CreateMutation>;
-export type Listing_CreateMutationOptions = ApolloReactCommon.BaseMutationOptions<Listing_CreateMutation, Listing_CreateMutationVariables>;
-export const Listing_DeleteDocument = gql`
-    mutation Listing_Delete($id: ID!, $version: Long!) {
+export type ListingCreateMutationHookResult = ReturnType<typeof useListingCreateMutation>;
+export type ListingCreateMutationResult = ApolloReactCommon.MutationResult<ListingCreateMutation>;
+export type ListingCreateMutationOptions = ApolloReactCommon.BaseMutationOptions<ListingCreateMutation, ListingCreateMutationVariables>;
+export const ListingDeleteDocument = gql`
+    mutation ListingDelete($id: ID!, $version: Long!) {
   deleteListing(id: $id, version: $version)
 }
     `;
-export type Listing_DeleteMutationFn = ApolloReactCommon.MutationFunction<Listing_DeleteMutation, Listing_DeleteMutationVariables>;
+export type ListingDeleteMutationFn = ApolloReactCommon.MutationFunction<ListingDeleteMutation, ListingDeleteMutationVariables>;
 
 /**
- * __useListing_DeleteMutation__
+ * __useListingDeleteMutation__
  *
- * To run a mutation, you first call `useListing_DeleteMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useListing_DeleteMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useListingDeleteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useListingDeleteMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [listingDeleteMutation, { data, loading, error }] = useListing_DeleteMutation({
+ * const [listingDeleteMutation, { data, loading, error }] = useListingDeleteMutation({
  *   variables: {
  *      id: // value for 'id'
  *      version: // value for 'version'
  *   },
  * });
  */
-export function useListing_DeleteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Listing_DeleteMutation, Listing_DeleteMutationVariables>) {
+export function useListingDeleteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ListingDeleteMutation, ListingDeleteMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Listing_DeleteMutation, Listing_DeleteMutationVariables>(Listing_DeleteDocument, options);
+        return ApolloReactHooks.useMutation<ListingDeleteMutation, ListingDeleteMutationVariables>(ListingDeleteDocument, options);
       }
-export type Listing_DeleteMutationHookResult = ReturnType<typeof useListing_DeleteMutation>;
-export type Listing_DeleteMutationResult = ApolloReactCommon.MutationResult<Listing_DeleteMutation>;
-export type Listing_DeleteMutationOptions = ApolloReactCommon.BaseMutationOptions<Listing_DeleteMutation, Listing_DeleteMutationVariables>;
-export const Listings_SearchDocument = gql`
-    query Listings_Search($q: String!, $first: Int = 20) {
+export type ListingDeleteMutationHookResult = ReturnType<typeof useListingDeleteMutation>;
+export type ListingDeleteMutationResult = ApolloReactCommon.MutationResult<ListingDeleteMutation>;
+export type ListingDeleteMutationOptions = ApolloReactCommon.BaseMutationOptions<ListingDeleteMutation, ListingDeleteMutationVariables>;
+export const ListingsSearchDocument = gql`
+    query ListingsSearch($q: String!, $first: Int = 20) {
   searchListings(q: $q, first: $first) {
     ...ListingListFields
   }
@@ -884,72 +894,72 @@ export const Listings_SearchDocument = gql`
     ${ListingListFieldsFragmentDoc}`;
 
 /**
- * __useListings_SearchQuery__
+ * __useListingsSearchQuery__
  *
- * To run a query within a React component, call `useListings_SearchQuery` and pass it any options that fit your needs.
- * When your component renders, `useListings_SearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useListingsSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingsSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useListings_SearchQuery({
+ * const { data, loading, error } = useListingsSearchQuery({
  *   variables: {
  *      q: // value for 'q'
  *      first: // value for 'first'
  *   },
  * });
  */
-export function useListings_SearchQuery(baseOptions: ApolloReactHooks.QueryHookOptions<Listings_SearchQuery, Listings_SearchQueryVariables> & ({ variables: Listings_SearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useListingsSearchQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ListingsSearchQuery, ListingsSearchQueryVariables> & ({ variables: ListingsSearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<Listings_SearchQuery, Listings_SearchQueryVariables>(Listings_SearchDocument, options);
+        return ApolloReactHooks.useQuery<ListingsSearchQuery, ListingsSearchQueryVariables>(ListingsSearchDocument, options);
       }
-export function useListings_SearchLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Listings_SearchQuery, Listings_SearchQueryVariables>) {
+export function useListingsSearchLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ListingsSearchQuery, ListingsSearchQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<Listings_SearchQuery, Listings_SearchQueryVariables>(Listings_SearchDocument, options);
+          return ApolloReactHooks.useLazyQuery<ListingsSearchQuery, ListingsSearchQueryVariables>(ListingsSearchDocument, options);
         }
-export function useListings_SearchSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Listings_SearchQuery, Listings_SearchQueryVariables>) {
+export function useListingsSearchSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ListingsSearchQuery, ListingsSearchQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Listings_SearchQuery, Listings_SearchQueryVariables>(Listings_SearchDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<ListingsSearchQuery, ListingsSearchQueryVariables>(ListingsSearchDocument, options);
         }
-export type Listings_SearchQueryHookResult = ReturnType<typeof useListings_SearchQuery>;
-export type Listings_SearchLazyQueryHookResult = ReturnType<typeof useListings_SearchLazyQuery>;
-export type Listings_SearchSuspenseQueryHookResult = ReturnType<typeof useListings_SearchSuspenseQuery>;
-export type Listings_SearchQueryResult = ApolloReactCommon.QueryResult<Listings_SearchQuery, Listings_SearchQueryVariables>;
-export const Listing_UpdateDocument = gql`
-    mutation Listing_Update($id: ID!, $input: UpdateListingInput!) {
+export type ListingsSearchQueryHookResult = ReturnType<typeof useListingsSearchQuery>;
+export type ListingsSearchLazyQueryHookResult = ReturnType<typeof useListingsSearchLazyQuery>;
+export type ListingsSearchSuspenseQueryHookResult = ReturnType<typeof useListingsSearchSuspenseQuery>;
+export type ListingsSearchQueryResult = ApolloReactCommon.QueryResult<ListingsSearchQuery, ListingsSearchQueryVariables>;
+export const ListingUpdateDocument = gql`
+    mutation ListingUpdate($id: ID!, $input: UpdateListingInput!) {
   updateListing(id: $id, input: $input) {
     ...ListingDetails
   }
 }
     ${ListingDetailsFragmentDoc}`;
-export type Listing_UpdateMutationFn = ApolloReactCommon.MutationFunction<Listing_UpdateMutation, Listing_UpdateMutationVariables>;
+export type ListingUpdateMutationFn = ApolloReactCommon.MutationFunction<ListingUpdateMutation, ListingUpdateMutationVariables>;
 
 /**
- * __useListing_UpdateMutation__
+ * __useListingUpdateMutation__
  *
- * To run a mutation, you first call `useListing_UpdateMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useListing_UpdateMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useListingUpdateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useListingUpdateMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [listingUpdateMutation, { data, loading, error }] = useListing_UpdateMutation({
+ * const [listingUpdateMutation, { data, loading, error }] = useListingUpdateMutation({
  *   variables: {
  *      id: // value for 'id'
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useListing_UpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Listing_UpdateMutation, Listing_UpdateMutationVariables>) {
+export function useListingUpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ListingUpdateMutation, ListingUpdateMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Listing_UpdateMutation, Listing_UpdateMutationVariables>(Listing_UpdateDocument, options);
+        return ApolloReactHooks.useMutation<ListingUpdateMutation, ListingUpdateMutationVariables>(ListingUpdateDocument, options);
       }
-export type Listing_UpdateMutationHookResult = ReturnType<typeof useListing_UpdateMutation>;
-export type Listing_UpdateMutationResult = ApolloReactCommon.MutationResult<Listing_UpdateMutation>;
-export type Listing_UpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<Listing_UpdateMutation, Listing_UpdateMutationVariables>;
+export type ListingUpdateMutationHookResult = ReturnType<typeof useListingUpdateMutation>;
+export type ListingUpdateMutationResult = ApolloReactCommon.MutationResult<ListingUpdateMutation>;
+export type ListingUpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<ListingUpdateMutation, ListingUpdateMutationVariables>;
 export const DeleteListingsDocument = gql`
     mutation DeleteListings($ids: [ID!]!) {
   deleteListings(ids: $ids)
@@ -1022,8 +1032,8 @@ export type ListingsQueryHookResult = ReturnType<typeof useListingsQuery>;
 export type ListingsLazyQueryHookResult = ReturnType<typeof useListingsLazyQuery>;
 export type ListingsSuspenseQueryHookResult = ReturnType<typeof useListingsSuspenseQuery>;
 export type ListingsQueryResult = ApolloReactCommon.QueryResult<ListingsQuery, ListingsQueryVariables>;
-export const ListingByIdDocument = gql`
-    query ListingById($id: ID!) {
+export const ListingByIdOneDocument = gql`
+    query ListingByIdOne($id: ID!) {
   listingById(id: $id) {
     ...ListingDetails
   }
@@ -1031,39 +1041,39 @@ export const ListingByIdDocument = gql`
     ${ListingDetailsFragmentDoc}`;
 
 /**
- * __useListingByIdQuery__
+ * __useListingByIdOneQuery__
  *
- * To run a query within a React component, call `useListingByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useListingByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useListingByIdOneQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingByIdOneQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useListingByIdQuery({
+ * const { data, loading, error } = useListingByIdOneQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useListingByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ListingByIdQuery, ListingByIdQueryVariables> & ({ variables: ListingByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useListingByIdOneQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ListingByIdOneQuery, ListingByIdOneQueryVariables> & ({ variables: ListingByIdOneQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<ListingByIdQuery, ListingByIdQueryVariables>(ListingByIdDocument, options);
+        return ApolloReactHooks.useQuery<ListingByIdOneQuery, ListingByIdOneQueryVariables>(ListingByIdOneDocument, options);
       }
-export function useListingByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ListingByIdQuery, ListingByIdQueryVariables>) {
+export function useListingByIdOneLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ListingByIdOneQuery, ListingByIdOneQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<ListingByIdQuery, ListingByIdQueryVariables>(ListingByIdDocument, options);
+          return ApolloReactHooks.useLazyQuery<ListingByIdOneQuery, ListingByIdOneQueryVariables>(ListingByIdOneDocument, options);
         }
-export function useListingByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ListingByIdQuery, ListingByIdQueryVariables>) {
+export function useListingByIdOneSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ListingByIdOneQuery, ListingByIdOneQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<ListingByIdQuery, ListingByIdQueryVariables>(ListingByIdDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<ListingByIdOneQuery, ListingByIdOneQueryVariables>(ListingByIdOneDocument, options);
         }
-export type ListingByIdQueryHookResult = ReturnType<typeof useListingByIdQuery>;
-export type ListingByIdLazyQueryHookResult = ReturnType<typeof useListingByIdLazyQuery>;
-export type ListingByIdSuspenseQueryHookResult = ReturnType<typeof useListingByIdSuspenseQuery>;
-export type ListingByIdQueryResult = ApolloReactCommon.QueryResult<ListingByIdQuery, ListingByIdQueryVariables>;
-export const Transaction_ByIdDocument = gql`
-    query Transaction_ById($id: ID!) {
+export type ListingByIdOneQueryHookResult = ReturnType<typeof useListingByIdOneQuery>;
+export type ListingByIdOneLazyQueryHookResult = ReturnType<typeof useListingByIdOneLazyQuery>;
+export type ListingByIdOneSuspenseQueryHookResult = ReturnType<typeof useListingByIdOneSuspenseQuery>;
+export type ListingByIdOneQueryResult = ApolloReactCommon.QueryResult<ListingByIdOneQuery, ListingByIdOneQueryVariables>;
+export const TransactionByIdDocument = gql`
+    query TransactionById($id: ID!) {
   transaction(id: $id) {
     ...TransactionDetails
   }
@@ -1071,104 +1081,104 @@ export const Transaction_ByIdDocument = gql`
     ${TransactionDetailsFragmentDoc}`;
 
 /**
- * __useTransaction_ByIdQuery__
+ * __useTransactionByIdQuery__
  *
- * To run a query within a React component, call `useTransaction_ByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useTransaction_ByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useTransactionByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTransactionByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useTransaction_ByIdQuery({
+ * const { data, loading, error } = useTransactionByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useTransaction_ByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<Transaction_ByIdQuery, Transaction_ByIdQueryVariables> & ({ variables: Transaction_ByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useTransactionByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<TransactionByIdQuery, TransactionByIdQueryVariables> & ({ variables: TransactionByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<Transaction_ByIdQuery, Transaction_ByIdQueryVariables>(Transaction_ByIdDocument, options);
+        return ApolloReactHooks.useQuery<TransactionByIdQuery, TransactionByIdQueryVariables>(TransactionByIdDocument, options);
       }
-export function useTransaction_ByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Transaction_ByIdQuery, Transaction_ByIdQueryVariables>) {
+export function useTransactionByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<TransactionByIdQuery, TransactionByIdQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<Transaction_ByIdQuery, Transaction_ByIdQueryVariables>(Transaction_ByIdDocument, options);
+          return ApolloReactHooks.useLazyQuery<TransactionByIdQuery, TransactionByIdQueryVariables>(TransactionByIdDocument, options);
         }
-export function useTransaction_ByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Transaction_ByIdQuery, Transaction_ByIdQueryVariables>) {
+export function useTransactionByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<TransactionByIdQuery, TransactionByIdQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Transaction_ByIdQuery, Transaction_ByIdQueryVariables>(Transaction_ByIdDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<TransactionByIdQuery, TransactionByIdQueryVariables>(TransactionByIdDocument, options);
         }
-export type Transaction_ByIdQueryHookResult = ReturnType<typeof useTransaction_ByIdQuery>;
-export type Transaction_ByIdLazyQueryHookResult = ReturnType<typeof useTransaction_ByIdLazyQuery>;
-export type Transaction_ByIdSuspenseQueryHookResult = ReturnType<typeof useTransaction_ByIdSuspenseQuery>;
-export type Transaction_ByIdQueryResult = ApolloReactCommon.QueryResult<Transaction_ByIdQuery, Transaction_ByIdQueryVariables>;
-export const Transaction_CreateDocument = gql`
-    mutation Transaction_Create($input: CreateTransactionInput!) {
+export type TransactionByIdQueryHookResult = ReturnType<typeof useTransactionByIdQuery>;
+export type TransactionByIdLazyQueryHookResult = ReturnType<typeof useTransactionByIdLazyQuery>;
+export type TransactionByIdSuspenseQueryHookResult = ReturnType<typeof useTransactionByIdSuspenseQuery>;
+export type TransactionByIdQueryResult = ApolloReactCommon.QueryResult<TransactionByIdQuery, TransactionByIdQueryVariables>;
+export const TransactionCreateDocument = gql`
+    mutation TransactionCreate($input: CreateTransactionInput!) {
   createTransaction(input: $input) {
     ...TransactionDetails
   }
 }
     ${TransactionDetailsFragmentDoc}`;
-export type Transaction_CreateMutationFn = ApolloReactCommon.MutationFunction<Transaction_CreateMutation, Transaction_CreateMutationVariables>;
+export type TransactionCreateMutationFn = ApolloReactCommon.MutationFunction<TransactionCreateMutation, TransactionCreateMutationVariables>;
 
 /**
- * __useTransaction_CreateMutation__
+ * __useTransactionCreateMutation__
  *
- * To run a mutation, you first call `useTransaction_CreateMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useTransaction_CreateMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useTransactionCreateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTransactionCreateMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [transactionCreateMutation, { data, loading, error }] = useTransaction_CreateMutation({
+ * const [transactionCreateMutation, { data, loading, error }] = useTransactionCreateMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useTransaction_CreateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Transaction_CreateMutation, Transaction_CreateMutationVariables>) {
+export function useTransactionCreateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<TransactionCreateMutation, TransactionCreateMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Transaction_CreateMutation, Transaction_CreateMutationVariables>(Transaction_CreateDocument, options);
+        return ApolloReactHooks.useMutation<TransactionCreateMutation, TransactionCreateMutationVariables>(TransactionCreateDocument, options);
       }
-export type Transaction_CreateMutationHookResult = ReturnType<typeof useTransaction_CreateMutation>;
-export type Transaction_CreateMutationResult = ApolloReactCommon.MutationResult<Transaction_CreateMutation>;
-export type Transaction_CreateMutationOptions = ApolloReactCommon.BaseMutationOptions<Transaction_CreateMutation, Transaction_CreateMutationVariables>;
-export const Transaction_DeleteDocument = gql`
-    mutation Transaction_Delete($id: ID!, $version: Long!) {
+export type TransactionCreateMutationHookResult = ReturnType<typeof useTransactionCreateMutation>;
+export type TransactionCreateMutationResult = ApolloReactCommon.MutationResult<TransactionCreateMutation>;
+export type TransactionCreateMutationOptions = ApolloReactCommon.BaseMutationOptions<TransactionCreateMutation, TransactionCreateMutationVariables>;
+export const TransactionDeleteDocument = gql`
+    mutation TransactionDelete($id: ID!, $version: Long!) {
   deleteTransaction(id: $id, version: $version)
 }
     `;
-export type Transaction_DeleteMutationFn = ApolloReactCommon.MutationFunction<Transaction_DeleteMutation, Transaction_DeleteMutationVariables>;
+export type TransactionDeleteMutationFn = ApolloReactCommon.MutationFunction<TransactionDeleteMutation, TransactionDeleteMutationVariables>;
 
 /**
- * __useTransaction_DeleteMutation__
+ * __useTransactionDeleteMutation__
  *
- * To run a mutation, you first call `useTransaction_DeleteMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useTransaction_DeleteMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useTransactionDeleteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTransactionDeleteMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [transactionDeleteMutation, { data, loading, error }] = useTransaction_DeleteMutation({
+ * const [transactionDeleteMutation, { data, loading, error }] = useTransactionDeleteMutation({
  *   variables: {
  *      id: // value for 'id'
  *      version: // value for 'version'
  *   },
  * });
  */
-export function useTransaction_DeleteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Transaction_DeleteMutation, Transaction_DeleteMutationVariables>) {
+export function useTransactionDeleteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<TransactionDeleteMutation, TransactionDeleteMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Transaction_DeleteMutation, Transaction_DeleteMutationVariables>(Transaction_DeleteDocument, options);
+        return ApolloReactHooks.useMutation<TransactionDeleteMutation, TransactionDeleteMutationVariables>(TransactionDeleteDocument, options);
       }
-export type Transaction_DeleteMutationHookResult = ReturnType<typeof useTransaction_DeleteMutation>;
-export type Transaction_DeleteMutationResult = ApolloReactCommon.MutationResult<Transaction_DeleteMutation>;
-export type Transaction_DeleteMutationOptions = ApolloReactCommon.BaseMutationOptions<Transaction_DeleteMutation, Transaction_DeleteMutationVariables>;
-export const Transactions_SearchDocument = gql`
-    query Transactions_Search($q: String!, $first: Int = 20) {
+export type TransactionDeleteMutationHookResult = ReturnType<typeof useTransactionDeleteMutation>;
+export type TransactionDeleteMutationResult = ApolloReactCommon.MutationResult<TransactionDeleteMutation>;
+export type TransactionDeleteMutationOptions = ApolloReactCommon.BaseMutationOptions<TransactionDeleteMutation, TransactionDeleteMutationVariables>;
+export const TransactionsSearchDocument = gql`
+    query TransactionsSearch($q: String!, $first: Int = 20) {
   searchTransactions(q: $q, first: $first) {
     ...TransactionListFields
   }
@@ -1176,72 +1186,72 @@ export const Transactions_SearchDocument = gql`
     ${TransactionListFieldsFragmentDoc}`;
 
 /**
- * __useTransactions_SearchQuery__
+ * __useTransactionsSearchQuery__
  *
- * To run a query within a React component, call `useTransactions_SearchQuery` and pass it any options that fit your needs.
- * When your component renders, `useTransactions_SearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useTransactionsSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTransactionsSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useTransactions_SearchQuery({
+ * const { data, loading, error } = useTransactionsSearchQuery({
  *   variables: {
  *      q: // value for 'q'
  *      first: // value for 'first'
  *   },
  * });
  */
-export function useTransactions_SearchQuery(baseOptions: ApolloReactHooks.QueryHookOptions<Transactions_SearchQuery, Transactions_SearchQueryVariables> & ({ variables: Transactions_SearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useTransactionsSearchQuery(baseOptions: ApolloReactHooks.QueryHookOptions<TransactionsSearchQuery, TransactionsSearchQueryVariables> & ({ variables: TransactionsSearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<Transactions_SearchQuery, Transactions_SearchQueryVariables>(Transactions_SearchDocument, options);
+        return ApolloReactHooks.useQuery<TransactionsSearchQuery, TransactionsSearchQueryVariables>(TransactionsSearchDocument, options);
       }
-export function useTransactions_SearchLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Transactions_SearchQuery, Transactions_SearchQueryVariables>) {
+export function useTransactionsSearchLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<TransactionsSearchQuery, TransactionsSearchQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<Transactions_SearchQuery, Transactions_SearchQueryVariables>(Transactions_SearchDocument, options);
+          return ApolloReactHooks.useLazyQuery<TransactionsSearchQuery, TransactionsSearchQueryVariables>(TransactionsSearchDocument, options);
         }
-export function useTransactions_SearchSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Transactions_SearchQuery, Transactions_SearchQueryVariables>) {
+export function useTransactionsSearchSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<TransactionsSearchQuery, TransactionsSearchQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Transactions_SearchQuery, Transactions_SearchQueryVariables>(Transactions_SearchDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<TransactionsSearchQuery, TransactionsSearchQueryVariables>(TransactionsSearchDocument, options);
         }
-export type Transactions_SearchQueryHookResult = ReturnType<typeof useTransactions_SearchQuery>;
-export type Transactions_SearchLazyQueryHookResult = ReturnType<typeof useTransactions_SearchLazyQuery>;
-export type Transactions_SearchSuspenseQueryHookResult = ReturnType<typeof useTransactions_SearchSuspenseQuery>;
-export type Transactions_SearchQueryResult = ApolloReactCommon.QueryResult<Transactions_SearchQuery, Transactions_SearchQueryVariables>;
-export const Transaction_UpdateDocument = gql`
-    mutation Transaction_Update($id: ID!, $input: UpdateTransactionInput!) {
+export type TransactionsSearchQueryHookResult = ReturnType<typeof useTransactionsSearchQuery>;
+export type TransactionsSearchLazyQueryHookResult = ReturnType<typeof useTransactionsSearchLazyQuery>;
+export type TransactionsSearchSuspenseQueryHookResult = ReturnType<typeof useTransactionsSearchSuspenseQuery>;
+export type TransactionsSearchQueryResult = ApolloReactCommon.QueryResult<TransactionsSearchQuery, TransactionsSearchQueryVariables>;
+export const TransactionUpdateDocument = gql`
+    mutation TransactionUpdate($id: ID!, $input: UpdateTransactionInput!) {
   updateTransaction(id: $id, input: $input) {
     ...TransactionDetails
   }
 }
     ${TransactionDetailsFragmentDoc}`;
-export type Transaction_UpdateMutationFn = ApolloReactCommon.MutationFunction<Transaction_UpdateMutation, Transaction_UpdateMutationVariables>;
+export type TransactionUpdateMutationFn = ApolloReactCommon.MutationFunction<TransactionUpdateMutation, TransactionUpdateMutationVariables>;
 
 /**
- * __useTransaction_UpdateMutation__
+ * __useTransactionUpdateMutation__
  *
- * To run a mutation, you first call `useTransaction_UpdateMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useTransaction_UpdateMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useTransactionUpdateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTransactionUpdateMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [transactionUpdateMutation, { data, loading, error }] = useTransaction_UpdateMutation({
+ * const [transactionUpdateMutation, { data, loading, error }] = useTransactionUpdateMutation({
  *   variables: {
  *      id: // value for 'id'
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useTransaction_UpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Transaction_UpdateMutation, Transaction_UpdateMutationVariables>) {
+export function useTransactionUpdateMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<TransactionUpdateMutation, TransactionUpdateMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<Transaction_UpdateMutation, Transaction_UpdateMutationVariables>(Transaction_UpdateDocument, options);
+        return ApolloReactHooks.useMutation<TransactionUpdateMutation, TransactionUpdateMutationVariables>(TransactionUpdateDocument, options);
       }
-export type Transaction_UpdateMutationHookResult = ReturnType<typeof useTransaction_UpdateMutation>;
-export type Transaction_UpdateMutationResult = ApolloReactCommon.MutationResult<Transaction_UpdateMutation>;
-export type Transaction_UpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<Transaction_UpdateMutation, Transaction_UpdateMutationVariables>;
+export type TransactionUpdateMutationHookResult = ReturnType<typeof useTransactionUpdateMutation>;
+export type TransactionUpdateMutationResult = ApolloReactCommon.MutationResult<TransactionUpdateMutation>;
+export type TransactionUpdateMutationOptions = ApolloReactCommon.BaseMutationOptions<TransactionUpdateMutation, TransactionUpdateMutationVariables>;
 export const DeleteTransactionsDocument = gql`
     mutation DeleteTransactions($ids: [ID!]!) {
   deleteTransactions(ids: $ids)
@@ -1277,6 +1287,10 @@ export const TransactionsDocument = gql`
     query Transactions($offset: Int = 0, $limit: Int = 50) {
   transactions(offset: $offset, limit: $limit) {
     id
+    title
+    subtitle
+    contactId
+    listingId
     status
     total {
       amount
@@ -1319,8 +1333,8 @@ export type TransactionsQueryHookResult = ReturnType<typeof useTransactionsQuery
 export type TransactionsLazyQueryHookResult = ReturnType<typeof useTransactionsLazyQuery>;
 export type TransactionsSuspenseQueryHookResult = ReturnType<typeof useTransactionsSuspenseQuery>;
 export type TransactionsQueryResult = ApolloReactCommon.QueryResult<TransactionsQuery, TransactionsQueryVariables>;
-export const TransactionByIdDocument = gql`
-    query TransactionById($id: ID!) {
+export const TransactionByIdOneDocument = gql`
+    query TransactionByIdOne($id: ID!) {
   transactionById(id: $id) {
     id
     status
@@ -1333,34 +1347,34 @@ export const TransactionByIdDocument = gql`
     `;
 
 /**
- * __useTransactionByIdQuery__
+ * __useTransactionByIdOneQuery__
  *
- * To run a query within a React component, call `useTransactionByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useTransactionByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useTransactionByIdOneQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTransactionByIdOneQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useTransactionByIdQuery({
+ * const { data, loading, error } = useTransactionByIdOneQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useTransactionByIdQuery(baseOptions: ApolloReactHooks.QueryHookOptions<TransactionByIdQuery, TransactionByIdQueryVariables> & ({ variables: TransactionByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useTransactionByIdOneQuery(baseOptions: ApolloReactHooks.QueryHookOptions<TransactionByIdOneQuery, TransactionByIdOneQueryVariables> & ({ variables: TransactionByIdOneQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useQuery<TransactionByIdQuery, TransactionByIdQueryVariables>(TransactionByIdDocument, options);
+        return ApolloReactHooks.useQuery<TransactionByIdOneQuery, TransactionByIdOneQueryVariables>(TransactionByIdOneDocument, options);
       }
-export function useTransactionByIdLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<TransactionByIdQuery, TransactionByIdQueryVariables>) {
+export function useTransactionByIdOneLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<TransactionByIdOneQuery, TransactionByIdOneQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useLazyQuery<TransactionByIdQuery, TransactionByIdQueryVariables>(TransactionByIdDocument, options);
+          return ApolloReactHooks.useLazyQuery<TransactionByIdOneQuery, TransactionByIdOneQueryVariables>(TransactionByIdOneDocument, options);
         }
-export function useTransactionByIdSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<TransactionByIdQuery, TransactionByIdQueryVariables>) {
+export function useTransactionByIdOneSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<TransactionByIdOneQuery, TransactionByIdOneQueryVariables>) {
           const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<TransactionByIdQuery, TransactionByIdQueryVariables>(TransactionByIdDocument, options);
+          return ApolloReactHooks.useSuspenseQuery<TransactionByIdOneQuery, TransactionByIdOneQueryVariables>(TransactionByIdOneDocument, options);
         }
-export type TransactionByIdQueryHookResult = ReturnType<typeof useTransactionByIdQuery>;
-export type TransactionByIdLazyQueryHookResult = ReturnType<typeof useTransactionByIdLazyQuery>;
-export type TransactionByIdSuspenseQueryHookResult = ReturnType<typeof useTransactionByIdSuspenseQuery>;
-export type TransactionByIdQueryResult = ApolloReactCommon.QueryResult<TransactionByIdQuery, TransactionByIdQueryVariables>;
+export type TransactionByIdOneQueryHookResult = ReturnType<typeof useTransactionByIdOneQuery>;
+export type TransactionByIdOneLazyQueryHookResult = ReturnType<typeof useTransactionByIdOneLazyQuery>;
+export type TransactionByIdOneSuspenseQueryHookResult = ReturnType<typeof useTransactionByIdOneSuspenseQuery>;
+export type TransactionByIdOneQueryResult = ApolloReactCommon.QueryResult<TransactionByIdOneQuery, TransactionByIdOneQueryVariables>;

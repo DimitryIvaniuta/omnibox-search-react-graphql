@@ -1,3 +1,3 @@
-query Listing_ById($id: ID!) {
+query ListingById($id: ID!) {
     listing(id: $id) { ...ListingDetails }
 }

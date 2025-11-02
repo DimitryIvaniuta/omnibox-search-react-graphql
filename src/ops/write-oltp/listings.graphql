@@ -4,7 +4,7 @@ query Listings($offset: Int = 0, $limit: Int = 50) {
         ...ListingDetails
     }
 }
-query ListingById($id: ID!) {
+query ListingByIdOne($id: ID!) {
     listingById(id: $id) { ...ListingDetails }
 }
 
