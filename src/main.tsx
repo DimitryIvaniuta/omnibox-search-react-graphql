@@ -4,7 +4,7 @@ import { RouterProvider } from "react-router-dom";
 import { ApolloProvider } from "@apollo/client";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@/styles/bootstrap.scss";
-import { router } from "@/routes";
+import { router } from "@/router/routes";
 import { writeClient } from "@/apollo/writeClient";
 import { ActionNotificationsProvider } from "@/components/ActionsNotification";
 
