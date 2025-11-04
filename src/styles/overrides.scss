@@ -1,0 +1,21 @@
+/* darker checkbox borders (Bootstrap 5) */
+.form-check-input {
+  border-color: #495057 !important;          /* dark gray */
+}
+.form-check-input:checked {
+  border-color: #495057 !important;
+}
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.15rem rgba(73, 80, 87, 0.25) !important;
+}
+
+/* fade-out highlight for newly created/updated row */
+@keyframes rowHighlightFade {
+  0%   { background-color: var(--bs-success-bg-subtle, #d1e7dd); }
+  85%  { background-color: var(--bs-success-bg-subtle, #d1e7dd); }
+  100% { background-color: transparent; }
+}
+
+.table tbody tr.row-highlight {
+  animation: rowHighlightFade 3s ease-out forwards;
+}

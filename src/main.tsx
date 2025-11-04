@@ -7,6 +7,7 @@ import "@/styles/bootstrap.scss";
 import { router } from "@/router/routes";
 import { writeClient } from "@/apollo/writeClient";
 import { ActionNotificationsProvider } from "@/components/ActionsNotification";
+import "@/styles/overrides.scss";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>

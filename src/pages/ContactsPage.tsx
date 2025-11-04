@@ -5,6 +5,8 @@ import {
     useDeleteContactsMutation,
 } from "@/generated/write-oltp/graphql";
 
+const SELECTION_KEY = "contacts:selectedIds";
+
 /**
  * ContactsPage
  * - Professional grid with multi-select:
@@ -24,6 +26,11 @@ export default function ContactsPage() {
         state?: { highlightId?: string };
     };
 
+    const persistSelection = useCallback((sel: Record<string, boolean>) => {
+        const ids = Object.keys(sel).filter((k) => sel[k]);
+        sessionStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
+    }, []);
+
     // Data
     const { data, loading, refetch } = useContactsQuery({
         variables: { offset: 0, limit: 50 },
@@ -37,6 +44,7 @@ export default function ContactsPage() {
 
     // Selection state
     const [selected, setSelected] = useState<Record<string, boolean>>({});
+
     const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
     const selectAllRef = useRef<HTMLInputElement>(null);
 
@@ -68,11 +76,51 @@ export default function ContactsPage() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+    useEffect(() => {
+        if (!highlightId) return;
+        const t = window.setTimeout(() => setHighlightId(null), 3000);
+        return () => window.clearTimeout(t);
+    }, [highlightId]);
 
     // Toggle a single id
     const toggleId = useCallback((id: string, checked: boolean) => {
         setSelected((prev) => ({ ...prev, [id]: checked }));
     }, []);
+
+    // save on change checkbox
+    useEffect(() => {
+        const ids = Object.keys(selected).filter((k) => selected[k]);
+        sessionStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
+    }, [selected]);
+
+    useEffect(() => {
+        if (!rows.length) return;
+        const raw = sessionStorage.getItem(SELECTION_KEY);
+        if (!raw) return;
+
+        let ids: string[] = [];
+        try { ids = JSON.parse(raw) as string[]; } catch { /* ignore */ }
+
+        setSelected((prev) => {
+            // Fast path: nothing to merge
+            if (!ids.length) return prev;
+
+            let changed = false;
+            const next = { ...prev };
+            for (const r of rows) {
+                // only set if undefined in current state (don’t clobber user toggles)
+                if (next[r.id] === undefined && ids.includes(r.id)) {
+                    next[r.id] = true;
+                    changed = true;
+                }
+            }
+            return changed ? next : prev;
+        });
+    }, [rows]);
+
+    useEffect(() => {
+        persistSelection(selected);
+    }, [selected, persistSelection]);
 
     // Apply a range toggle (inclusive) using a boolean setter
     const toggleRange = useCallback(
@@ -204,15 +252,18 @@ export default function ContactsPage() {
                                 </td>
 
                                 <td>
-                                    {/* If your schema is `name`, replace r.fullName with r.name below */}
                                     <button
                                         type="button"
                                         className="btn btn-link p-0 align-baseline text-decoration-none"
                                         aria-label={`Open ${r.fullName} details`}
-                                        onClick={() => nav(`/contacts/${r.id}`)}
+                                        onClick={() => {
+                                            persistSelection(selected);
+                                            nav(`/contacts/${r.id}`);
+                                        }}
                                     >
                                         {r.fullName}
                                     </button>
+
                                 </td>
 
                                 <td className="text-truncate" style={{ maxWidth: 260 }}>
@@ -228,7 +279,10 @@ export default function ContactsPage() {
                                         <button
                                             type="button"
                                             className="btn btn-outline-secondary"
-                                            onClick={() => nav(`/contacts/${r.id}`)}
+                                            onClick={() => {
+                                                persistSelection(selected);
+                                                nav(`/contacts/${r.id}`);
+                                            }}
                                             title="Edit"
                                             aria-label="Edit"
                                         >
