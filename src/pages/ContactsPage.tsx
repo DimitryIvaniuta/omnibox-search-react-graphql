@@ -46,7 +46,7 @@ export default function ContactsPage() {
     // Derived selection info
     const allIds = useMemo(() => rows.map((r) => r.id), [rows]);
     const selectedIds = useMemo(
-        () => allIds.filter((id) => !!selected[id]),
+        () => allIds.filter((id) => selected[id]),
         [allIds, selected]
     );
     const selectedCount = selectedIds.length;
@@ -94,9 +94,7 @@ export default function ContactsPage() {
     const onSelectAll = useCallback(
         (checked: boolean) => {
             const next: Record<string, boolean> = {};
-            if (checked) {
-                for (const id of allIds) next[id] = true;
-            }
+            for (const id of allIds) next[id] = checked;
             setSelected(next);
             setLastClickedIndex(null);
         },
@@ -104,21 +102,19 @@ export default function ContactsPage() {
     );
 
     // Checkbox handler per row
-    const onRowCheckboxClick = useCallback(
-        (e: React.MouseEvent<HTMLInputElement>, rowIndex: number, rowId: string) => {
-            const target = e.currentTarget;
-            const willCheck = !target.checked; // React's onClick fires before onChange reflects new state
+    const onRowCheckboxChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>, rowIndex: number, rowId: string) => {
+            const checked = e.currentTarget.checked;                          // new (toggled) state
+            const shift = (e.nativeEvent as MouseEvent).shiftKey;              // detect Shift
 
-            if (e.shiftKey && lastClickedIndex != null) {
-                // SHIFT: toggle a range to the desired state (willCheck)
-                toggleRange(lastClickedIndex, rowIndex, willCheck);
+            if (shift && lastClickedIndex != null) {
+                toggleRange(lastClickedIndex, rowIndex, checked);               // apply to range
             } else {
-                // Normal toggle
-                toggleId(rowId, willCheck);
+                toggleId(rowId, checked);                                       // single toggle
             }
             setLastClickedIndex(rowIndex);
         },
-        [lastClickedIndex, toggleId, toggleRange]
+        [lastClickedIndex, toggleRange, toggleId]
     );
 
     // Optional: row click highlights selection state (not toggling to avoid surprises)
@@ -202,10 +198,7 @@ export default function ContactsPage() {
                                         className="form-check-input"
                                         type="checkbox"
                                         checked={selectedRow}
-                                        onClick={(e) => onRowCheckboxClick(e, idx, r.id)}
-                                        onChange={() => {
-                                            /* no-op: handled by onClick to access shiftKey before state flips */
-                                        }}
+                                        onChange={(e) => onRowCheckboxChange(e, idx, r.id)}                 // <— use onChange
                                         aria-label={`Select ${r.fullName}`}
                                     />
                                 </td>
