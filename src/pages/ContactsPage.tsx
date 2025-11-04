@@ -18,7 +18,7 @@ const SELECTION_KEY = "contacts:selectedIds";
  *
  * NOTE: If your schema uses `name` rather than `fullName`, replace occurrences accordingly.
  */
-export default function ContactsPage() {
+const ContactsPage = () => {
     const nav = useNavigate();
 
     // Keep Location to preserve pathname/search (and custom state)
@@ -26,12 +26,7 @@ export default function ContactsPage() {
         state?: { highlightId?: string };
     };
 
-    const persistSelection = useCallback((sel: Record<string, boolean>) => {
-        const ids = Object.keys(sel).filter((k) => sel[k]);
-        sessionStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
-    }, []);
-
-    // Data
+    // Appolo data
     const { data, loading, refetch } = useContactsQuery({
         variables: { offset: 0, limit: 50 },
         fetchPolicy: "cache-and-network",
@@ -48,27 +43,12 @@ export default function ContactsPage() {
     const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
     const selectAllRef = useRef<HTMLInputElement>(null);
 
+    // hydration flag to avoid overwriting saved selection with {}
+    const didHydrateRef = useRef(false);
+
     // Row highlight (coming back from editor)
     const [highlightId, setHighlightId] = useState<string | null>(null);
 
-    // Derived selection info
-    const allIds = useMemo(() => rows.map((r) => r.id), [rows]);
-    const selectedIds = useMemo(
-        () => allIds.filter((id) => selected[id]),
-        [allIds, selected]
-    );
-    const selectedCount = selectedIds.length;
-    const allSelected = selectedCount > 0 && selectedCount === allIds.length;
-    const noneSelected = selectedCount === 0;
-
-    // Tri-state header checkbox
-    useEffect(() => {
-        if (selectAllRef.current) {
-            selectAllRef.current.indeterminate = !noneSelected && !allSelected;
-        }
-    }, [noneSelected, allSelected]);
-
-    // Pick up highlight id from router state once; then clear
     useEffect(() => {
         if (location.state?.highlightId) setHighlightId(location.state.highlightId);
         if (location.state) {
@@ -82,33 +62,47 @@ export default function ContactsPage() {
         return () => window.clearTimeout(t);
     }, [highlightId]);
 
-    // Toggle a single id
-    const toggleId = useCallback((id: string, checked: boolean) => {
-        setSelected((prev) => ({ ...prev, [id]: checked }));
-    }, []);
+    // Derived selection
+    const allIds = useMemo(() => rows.map((r) => r.id), [rows]);
+    const selectedIds = useMemo(
+        () => allIds.filter((id) => !!selected[id]),
+        [allIds, selected]
+    );
+    const selectedCount = selectedIds.length;
+    const allSelected = selectedCount > 0 && selectedCount === allIds.length;
+    const noneSelected = selectedCount === 0;
 
-    // save on change checkbox
+    // Tri-state header checkbox
     useEffect(() => {
-        const ids = Object.keys(selected).filter((k) => selected[k]);
-        sessionStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
-    }, [selected]);
+        if (selectAllRef.current) {
+            selectAllRef.current.indeterminate = !noneSelected && !allSelected;
+        }
+    }, [noneSelected, allSelected]);
 
+    // —— Restore selection whenever rows change (first paint & refetches) ——
     useEffect(() => {
         if (!rows.length) return;
         const raw = sessionStorage.getItem(SELECTION_KEY);
-        if (!raw) return;
+        if (!raw) {
+            // mark hydrated even if nothing to restore, so we can start persisting
+            didHydrateRef.current = true;
+            return;
+        }
 
         let ids: string[] = [];
-        try { ids = JSON.parse(raw) as string[]; } catch { /* ignore */ }
+        try {
+            ids = JSON.parse(raw) as string[];
+        } catch {
+            didHydrateRef.current = true;
+            return;
+        }
 
+        // Merge saved selection into current state without clobbering user changes
         setSelected((prev) => {
-            // Fast path: nothing to merge
             if (!ids.length) return prev;
-
             let changed = false;
             const next = { ...prev };
             for (const r of rows) {
-                // only set if undefined in current state (don’t clobber user toggles)
                 if (next[r.id] === undefined && ids.includes(r.id)) {
                     next[r.id] = true;
                     changed = true;
@@ -116,13 +110,26 @@ export default function ContactsPage() {
             }
             return changed ? next : prev;
         });
+
+        // ✅ allow persistence from now on
+        didHydrateRef.current = true;
     }, [rows]);
 
+    // —— Persist selection AFTER hydration; skip initial {} write ——
+    const persistSelection = useCallback((sel: Record<string, boolean>) => {
+        const ids = Object.keys(sel).filter((k) => sel[k]);
+        sessionStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
+    }, []);
     useEffect(() => {
+        if (!didHydrateRef.current) return; // ⛔ skip the initial empty write
         persistSelection(selected);
     }, [selected, persistSelection]);
 
-    // Apply a range toggle (inclusive) using a boolean setter
+    // —— Toggle helpers ——
+    const toggleId = useCallback((id: string, checked: boolean) => {
+        setSelected((prev) => ({ ...prev, [id]: checked }));
+    }, []);
+
     const toggleRange = useCallback(
         (fromIdx: number, toIdx: number, checked: boolean) => {
             const [start, end] = fromIdx < toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
@@ -138,44 +145,54 @@ export default function ContactsPage() {
         [rows]
     );
 
-    // Header “select all”
+    const onRowCheckboxChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>, rowIndex: number, rowId: string) => {
+            const checked = e.currentTarget.checked;
+            const shift = (e.nativeEvent as MouseEvent).shiftKey;
+            if (shift && lastClickedIndex != null) {
+                toggleRange(lastClickedIndex, rowIndex, checked);
+            } else {
+                toggleId(rowId, checked);
+            }
+            setLastClickedIndex(rowIndex);
+        },
+        [lastClickedIndex, toggleId, toggleRange]
+    );
+
     const onSelectAll = useCallback(
         (checked: boolean) => {
+            // Use {} to clear all when unchecked (smaller state, and restore still works)
+            if (!checked) {
+                setSelected({});
+                setLastClickedIndex(null);
+                return;
+            }
             const next: Record<string, boolean> = {};
-            for (const id of allIds) next[id] = checked;
+            for (const id of allIds) next[id] = true;
             setSelected(next);
             setLastClickedIndex(null);
         },
         [allIds]
     );
 
-    // Checkbox handler per row
-    const onRowCheckboxChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>, rowIndex: number, rowId: string) => {
-            const checked = e.currentTarget.checked;                          // new (toggled) state
-            const shift = (e.nativeEvent as MouseEvent).shiftKey;              // detect Shift
+    const isSelected = useCallback((id: string) => !!selected[id], [selected]);
 
-            if (shift && lastClickedIndex != null) {
-                toggleRange(lastClickedIndex, rowIndex, checked);               // apply to range
-            } else {
-                toggleId(rowId, checked);                                       // single toggle
-            }
-            setLastClickedIndex(rowIndex);
-        },
-        [lastClickedIndex, toggleRange, toggleId]
-    );
-
-    // Optional: row click highlights selection state (not toggling to avoid surprises)
-    const isSelected = useCallback((id: string) => selected[id], [selected]);
-
+    // UI
     return (
         <div className="d-flex flex-column gap-3">
-            {/* Toolbar (sticky below app header) */}
+            {/* Toolbar */}
             <div
                 className="d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
                 style={{ top: 56, zIndex: 1 }}
             >
-                <button className="btn btn-primary" onClick={() => nav("/contacts/new")}>
+                <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                        // save latest before navigating
+                        persistSelection(selected);
+                        nav("/contacts/new");
+                    }}
+                >
                     <i className="bi bi-plus-lg me-1" />
                     Add
                 </button>
@@ -188,18 +205,20 @@ export default function ContactsPage() {
                 >
                     <i className="bi bi-trash me-1" />
                     Delete
-                    {selectedCount > 0 && (
-                        <span className="badge text-bg-danger ms-2">{selectedCount}</span>
-                    )}
+                    {selectedCount > 0 && <span className="badge text-bg-danger ms-2">{selectedCount}</span>}
                 </button>
 
-                {/* Spacer */}
-                <div className="flex-grow-1" />
+                <button
+                    className="btn btn-outline-secondary"
+                    disabled={noneSelected}
+                    onClick={() => setSelected({})}
+                    title="Clear selection"
+                >
+                    Clear
+                </button>
 
-                {/* Subtle help */}
-                <div className="text-muted small">
-                    Tip: <kbd>Shift</kbd> + click to select a range
-                </div>
+                <div className="flex-grow-1" />
+                <div className="text-muted small">Tip: <kbd>Shift</kbd> + click to select a range</div>
             </div>
 
             <div className="table-responsive">
@@ -228,16 +247,12 @@ export default function ContactsPage() {
                     {rows.map((r, idx) => {
                         const selectedRow = isSelected(r.id);
                         const isHighlighted = r.id === highlightId;
-
                         return (
                             <tr
                                 key={r.id}
                                 className={
-                                    selectedRow
-                                        ? "table-primary"
-                                        : isHighlighted
-                                            ? "table-success"
-                                            : undefined
+                                    isHighlighted ? "table-success" :
+                                        selectedRow ? "table-primary" : undefined
                                 }
                                 style={{ cursor: "pointer" }}
                             >
@@ -246,7 +261,7 @@ export default function ContactsPage() {
                                         className="form-check-input"
                                         type="checkbox"
                                         checked={selectedRow}
-                                        onChange={(e) => onRowCheckboxChange(e, idx, r.id)}                 // <— use onChange
+                                        onChange={(e) => onRowCheckboxChange(e, idx, r.id)}
                                         aria-label={`Select ${r.fullName}`}
                                     />
                                 </td>
@@ -257,13 +272,13 @@ export default function ContactsPage() {
                                         className="btn btn-link p-0 align-baseline text-decoration-none"
                                         aria-label={`Open ${r.fullName} details`}
                                         onClick={() => {
+                                            // save latest before navigating
                                             persistSelection(selected);
                                             nav(`/contacts/${r.id}`);
                                         }}
                                     >
                                         {r.fullName}
                                     </button>
-
                                 </td>
 
                                 <td className="text-truncate" style={{ maxWidth: 260 }}>
@@ -318,3 +333,5 @@ export default function ContactsPage() {
         </div>
     );
 }
+
+export default ContactsPage;
