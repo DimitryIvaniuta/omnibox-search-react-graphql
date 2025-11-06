@@ -3,6 +3,7 @@ html, body, #root {
 }
 body {
   overflow: hidden; /* no window scrollbar */
+  scrollbar-gutter: auto !important;
 }
 /* darker checkbox borders (Bootstrap 5) */
 .form-check-input {
@@ -42,13 +43,21 @@ body {
   flex: 1 1 auto;   /* take remaining space */
   min-height: 0;    /* critical for inner scroll to work */
   overflow: hidden; /* only the nested grid scrolls */
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  width: 100%;
 }
 
 /* SmartTable scroll container: full width, own scrollbar */
 .smart-table-scroll {
-  height: 100%;
-  width: 100%;               /* stretch grid to 100% width */
-  overflow: auto;            /* only this element scrolls */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.3) transparent;
+  /* make the grid fill horizontally */
+  width: 100%;
+  /* bleed to the right edge (compensates 100vw vs 100%) */
+  margin-right: calc(-1 * (100vw - 100%));
+  /* keep content from being clipped while bleeding */
+  padding-right: calc(100vw - 100%);
 }
 
 /* 5px custom scrollbar */
@@ -63,12 +72,6 @@ body {
 .smart-table-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
-/* Firefox */
-.smart-table-scroll {
-  scrollbar-width: thin; /* ~6px */
-  scrollbar-color: rgba(0,0,0,.3) transparent;
-}
-
 /* Make header stand out and stay above rows */
 .smart-table-scroll thead th {
   border-bottom: 1px solid var(--bs-border-color) !important;

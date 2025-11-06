@@ -217,7 +217,16 @@ export default function SmartTable<T>(
                         />
                     </th>
                     {headerCells}
-                    <th style={{ width: 60 }} />
+                    <th
+                        style={{
+                            position: "sticky",
+                            top: 0,
+                            zIndex: 2,
+                            background: "var(--bs-light)",
+                            borderBottom: "1px solid var(--bs-border-color)",
+                            width: 60,
+                        }}
+                    />
                 </tr>
                 </thead>
                 <tbody>

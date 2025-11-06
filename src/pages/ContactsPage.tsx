@@ -93,7 +93,7 @@ export default function ContactsPage() {
         <div className="d-flex flex-column gap-3">
             {/* Toolbar */}
             <div
-                className="d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
+                className="toolbar d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
                 style={{ top: 56, zIndex: 1 }}
             >
                 <button className="btn btn-primary" onClick={() => nav("/contacts/new")}>
@@ -116,16 +116,19 @@ export default function ContactsPage() {
                 <div className="text-muted small">Tip: <kbd>Shift</kbd> + click to select a range</div>
             </div>
 
-            {/* Universal grid */}
-            <SmartTable
-                rows={rows}
-                columns={columns}
-                getRowId={(r) => r.id}
-                highlightedId={highlightedId}      // SmartTable shows + fades internally
-                selectionKey={SELECTION_KEY}       // persist selection across navs
-                onSelectionChange={setSelectedIds} // drives toolbar
-                selectAllAriaLabel="Select all contacts"
-            />
+            {/* the grid region fills remaining height; only it scrolls */}
+            <div className="grid-wrap">
+                <SmartTable
+                    rows={rows}
+                    columns={columns}
+                    getRowId={(r) => r.id}
+                    highlightedId={highlightedId}
+                    selectionKey={SELECTION_KEY}
+                    onSelectionChange={setSelectedIds}
+                    selectAllAriaLabel="Select all contacts"
+                    // no stickyOffset needed; header sticks at top of its own scroll container
+                />
+            </div>
 
             {loading && <div className="text-muted py-2">Loading…</div>}
         </div>
