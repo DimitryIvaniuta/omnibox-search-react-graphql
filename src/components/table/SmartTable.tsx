@@ -193,19 +193,28 @@ export default function SmartTable<T>(
     }, []);
 
     return (
-        <div className="smart-table-scroll table-responsive"
-             style={{ maxHeight: "60vh", overflowY: "auto", overflowX: "auto" }}
+        <div
+            className="smart-table-wrap"         // (no need for .table-responsive here)
+            style={{ maxHeight: "60vh", overflow: "hidden" }}
         >
-            <table className={tableClassName}>
-                <thead className="table-light position-sticky" style={{ top: stickyOffset, zIndex: 1 }}>
-                <tr>
-                    <th style={{
-                        position: "sticky",
-                        top: 0,
+            <table className={tableClassName} style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate" }}>
+                {/* 2) Header never scrolls because the body below is the only scroller */}
+                <thead
+                    className="table-light"
+                    style={{
+                        display: "table",              // keep column widths aligned with tbody rows
+                        width: "100%",
+                        tableLayout: "fixed",
+                        position: "sticky",            // stays pinned if the page itself scrolls a bit
+                        top: stickyOffset || 0,
                         zIndex: 2,
                         background: "var(--bs-light)",
-                        width: 44,
-                    }}>
+                        // borderBottom: "1px solid var(--bs-border-color)",
+                        height: 48,              // used just for consistent layout
+                    }}
+                >
+                <tr>
+                    <th style={{ width: 44 }}>
                         <input
                             ref={selectAllRef}
                             className="form-check-input"
@@ -216,20 +225,38 @@ export default function SmartTable<T>(
                             title="Select all"
                         />
                     </th>
-                    {headerCells}
-                    <th
-                        style={{
-                            position: "sticky",
-                            top: 0,
-                            zIndex: 2,
-                            background: "var(--bs-light)",
-                            borderBottom: "1px solid var(--bs-border-color)",
-                            width: 60,
-                        }}
-                    />
+
+                    {columns.map(col => (
+                        <th
+                            key={col.key}
+                            className={col.className}
+                            style={{
+                                width: col.width,
+                                minWidth: col.minWidth,
+                                background: "var(--bs-light)",
+                            }}
+                        >
+                            {col.header}
+                        </th>
+                    ))}
+
+                    <th style={{ width: 60 }} />
                 </tr>
                 </thead>
-                <tbody>
+
+                {/* 3) Only tbody scrolls; scrollbar never overlaps the header */}
+                <tbody
+                    style={{
+                        display: "block",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                        // available space under the header within the wrapper
+                        maxHeight: `calc(60vh - 48px)`,
+                        // optional: slim, nice scrollbar (WebKit + Firefox)
+                        scrollbarWidth: "thin",
+                        scrollbarColor: "rgba(0,0,0,.35) transparent",
+                    } as React.CSSProperties}
+                >
                 {rows.map((row, idx) => {
                     const id = rowId(row, idx);
                     const isSelected = selected[id];
@@ -238,11 +265,12 @@ export default function SmartTable<T>(
                     return (
                         <tr
                             key={id}
+                            // each row renders as a table to align with thead widths
+                            style={{ display: "table", width: "100%", tableLayout: "fixed", cursor: "pointer" }}
                             className={isHighlighted ? "row-highlight" : isSelected ? "table-primary" : undefined}
-                            style={{ cursor: "pointer" }}
                             onDoubleClick={onRowDoubleClick ? () => onRowDoubleClick(row) : undefined}
                         >
-                            <td>
+                            <td style={{ width: 44 }}>
                                 <input
                                     className="form-check-input"
                                     type="checkbox"
@@ -252,7 +280,7 @@ export default function SmartTable<T>(
                                 />
                             </td>
 
-                            {columns.map((col) => (
+                            {columns.map(col => (
                                 <td
                                     key={col.key}
                                     className={col.className}
@@ -262,13 +290,13 @@ export default function SmartTable<T>(
                                 </td>
                             ))}
 
-                            <td className="text-end" />
+                            <td className="text-end" style={{ width: 60 }} />
                         </tr>
                     );
                 })}
 
                 {rows.length === 0 && (
-                    <tr>
+                    <tr style={{ display: "table", width: "100%", tableLayout: "fixed" }}>
                         <td colSpan={columns.length + 2} className="text-center text-muted py-4">
                             No records.
                         </td>

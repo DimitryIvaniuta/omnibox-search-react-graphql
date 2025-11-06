@@ -95,7 +95,7 @@ export default function ContactsPage() {
 
     return (
         // Make sure your outer shell gives this <main> full height: class "app-main" is styled in overrides.scss
-        <main className="app-main d-flex flex-column">
+        <div className="app-main d-flex flex-column">
             {/* pinned toolbar above the grid */}
             <div
                 className="d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
@@ -134,6 +134,6 @@ export default function ContactsPage() {
             </div>
 
             {loading && <div className="text-muted py-2">Loading…</div>}
-        </main>
+        </div>
     );
 }
