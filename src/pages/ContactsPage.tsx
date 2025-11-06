@@ -1,32 +1,14 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, type Location } from "react-router-dom";
-import {
-    useContactsQuery,
-    useDeleteContactsMutation,
-} from "@/generated/write-oltp/graphql";
+import { useContactsQuery, useDeleteContactsMutation } from "@/generated/write-oltp/graphql";
+import SmartTable, { type Column } from "@/components/table/SmartTable";
 
 const SELECTION_KEY = "contacts:selectedIds";
 
-/**
- * ContactsPage
- * - Professional grid with multi-select:
- *   • Click checkbox = toggle row
- *   • Shift+click checkbox = select range from last click to current
- *   • Header checkbox = select/deselect all (tri-state)
- * - Selected rows are highlighted; toolbar shows count and enables bulk delete
- * - Double-click row or click the Name button to open the full-screen editor
- *
- * NOTE: If your schema uses `name` rather than `fullName`, replace occurrences accordingly.
- */
-const ContactsPage = () => {
+export default function ContactsPage() {
     const nav = useNavigate();
+    const location = useLocation() as Location & { state?: { highlightId?: string } };
 
-    // Keep Location to preserve pathname/search (and custom state)
-    const location = useLocation() as Location & {
-        state?: { highlightId?: string };
-    };
-
-    // Appolo data
     const { data, loading, refetch } = useContactsQuery({
         variables: { offset: 0, limit: 50 },
         fetchPolicy: "cache-and-network",
@@ -37,147 +19,76 @@ const ContactsPage = () => {
 
     const rows = data?.contacts ?? [];
 
-    // Selection state
-    const [selected, setSelected] = useState<Record<string, boolean>>({});
-
-    const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
-    const selectAllRef = useRef<HTMLInputElement>(null);
-
-    // hydration flag to avoid overwriting saved selection with {}
-    const didHydrateRef = useRef(false);
-
-    // Row highlight (coming back from editor)
-    const [highlightId, setHighlightId] = useState<string | null>(null);
-
+    // Read highlightId from router state; SmartTable will fade it internally
+    const highlightedId = location.state?.highlightId ?? null;
     useEffect(() => {
-        if (location.state?.highlightId) setHighlightId(location.state.highlightId);
         if (location.state) {
             window.history.replaceState(null, "", location.pathname + location.search);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    useEffect(() => {
-        if (!highlightId) return;
-        const t = window.setTimeout(() => setHighlightId(null), 3000);
-        return () => window.clearTimeout(t);
-    }, [highlightId]);
 
-    // Derived selection
-    const allIds = useMemo(() => rows.map((r) => r.id), [rows]);
-    const selectedIds = useMemo(
-        () => allIds.filter((id) => !!selected[id]),
-        [allIds, selected]
-    );
-    const selectedCount = selectedIds.length;
-    const allSelected = selectedCount > 0 && selectedCount === allIds.length;
-    const noneSelected = selectedCount === 0;
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const noneSelected = selectedIds.length === 0;
 
-    // Tri-state header checkbox
-    useEffect(() => {
-        if (selectAllRef.current) {
-            selectAllRef.current.indeterminate = !noneSelected && !allSelected;
-        }
-    }, [noneSelected, allSelected]);
-
-    // —— Restore selection whenever rows change (first paint & refetches) ——
-    useEffect(() => {
-        if (!rows.length) return;
-        const raw = sessionStorage.getItem(SELECTION_KEY);
-        if (!raw) {
-            // mark hydrated even if nothing to restore, so we can start persisting
-            didHydrateRef.current = true;
-            return;
-        }
-
-        let ids: string[] = [];
-        try {
-            ids = JSON.parse(raw) as string[];
-        } catch {
-            didHydrateRef.current = true;
-            return;
-        }
-
-        // Merge saved selection into current state without clobbering user changes
-        setSelected((prev) => {
-            if (!ids.length) return prev;
-            let changed = false;
-            const next = { ...prev };
-            for (const r of rows) {
-                if (next[r.id] === undefined && ids.includes(r.id)) {
-                    next[r.id] = true;
-                    changed = true;
-                }
-            }
-            return changed ? next : prev;
-        });
-
-        // ✅ allow persistence from now on
-        didHydrateRef.current = true;
-    }, [rows]);
-
-    // —— Persist selection AFTER hydration; skip initial {} write ——
-    const persistSelection = useCallback((sel: Record<string, boolean>) => {
-        const ids = Object.keys(sel).filter((k) => sel[k]);
-        sessionStorage.setItem(SELECTION_KEY, JSON.stringify(ids));
-    }, []);
-    useEffect(() => {
-        if (!didHydrateRef.current) return; // ⛔ skip the initial empty write
-        persistSelection(selected);
-    }, [selected, persistSelection]);
-
-    // —— Toggle helpers ——
-    const toggleId = useCallback((id: string, checked: boolean) => {
-        setSelected((prev) => ({ ...prev, [id]: checked }));
-    }, []);
-
-    const toggleRange = useCallback(
-        (fromIdx: number, toIdx: number, checked: boolean) => {
-            const [start, end] = fromIdx < toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
-            setSelected((prev) => {
-                const next = { ...prev };
-                for (let i = start; i <= end; i++) {
-                    const id = rows[i].id;
-                    next[id] = checked;
-                }
-                return next;
-            });
+    const columns = useMemo<Column<(typeof rows)[number]>[]>(() => [
+        {
+            key: "name",
+            header: "Name",
+            minWidth: 240,
+            cell: (r) => (
+                <button
+                    type="button"
+                    className="btn btn-link p-0 align-baseline text-decoration-none"
+                    aria-label={`Open ${r.fullName} details`}
+                    onClick={() => nav(`/contacts/${r.id}`)}
+                >
+                    {r.fullName}
+                </button>
+            ),
         },
-        [rows]
-    );
-
-    const onRowCheckboxChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>, rowIndex: number, rowId: string) => {
-            const checked = e.currentTarget.checked;
-            const shift = (e.nativeEvent as MouseEvent).shiftKey;
-            if (shift && lastClickedIndex != null) {
-                toggleRange(lastClickedIndex, rowIndex, checked);
-            } else {
-                toggleId(rowId, checked);
-            }
-            setLastClickedIndex(rowIndex);
+        {
+            key: "email",
+            header: "Email",
+            minWidth: 220,
+            cell: (r) => r.email ?? <span className="text-muted">—</span>,
         },
-        [lastClickedIndex, toggleId, toggleRange]
-    );
-
-    const onSelectAll = useCallback(
-        (checked: boolean) => {
-            // Use {} to clear all when unchecked (smaller state, and restore still works)
-            if (!checked) {
-                setSelected({});
-                setLastClickedIndex(null);
-                return;
-            }
-            const next: Record<string, boolean> = {};
-            for (const id of allIds) next[id] = true;
-            setSelected(next);
-            setLastClickedIndex(null);
+        {
+            key: "phone",
+            header: "Phone",
+            minWidth: 140,
+            cell: (r) => r.phone ?? <span className="text-muted">—</span>,
         },
-        [allIds]
-    );
+        {
+            key: "actions",
+            header: "",
+            width: 60,
+            className: "text-end",
+            cell: (r) => (
+                <div className="btn-group btn-group-sm" role="group">
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => nav(`/contacts/${r.id}`)}
+                        title="Edit"
+                        aria-label="Edit"
+                    >
+                        <i className="bi bi-pencil-square" />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        onClick={() => delContacts({ variables: { ids: [r.id] } })}
+                        title="Delete"
+                        aria-label="Delete"
+                    >
+                        <i className="bi bi-trash" />
+                    </button>
+                </div>
+            ),
+        },
+    ], [nav, delContacts]);
 
-    const isSelected = useCallback((id: string) => !!selected[id], [selected]);
-
-    // UI
     return (
         <div className="d-flex flex-column gap-3">
             {/* Toolbar */}
@@ -185,153 +96,38 @@ const ContactsPage = () => {
                 className="d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
                 style={{ top: 56, zIndex: 1 }}
             >
-                <button
-                    className="btn btn-primary"
-                    onClick={() => {
-                        // save latest before navigating
-                        persistSelection(selected);
-                        nav("/contacts/new");
-                    }}
-                >
+                <button className="btn btn-primary" onClick={() => nav("/contacts/new")}>
                     <i className="bi bi-plus-lg me-1" />
                     Add
                 </button>
 
                 <button
                     className="btn btn-outline-danger"
-                    disabled={selectedCount === 0 || deleting}
+                    disabled={noneSelected || deleting}
                     onClick={() => delContacts({ variables: { ids: selectedIds } })}
-                    title={selectedCount > 0 ? `Delete ${selectedCount} selected` : "Delete"}
+                    title={noneSelected ? "Delete" : `Delete ${selectedIds.length} selected`}
                 >
                     <i className="bi bi-trash me-1" />
                     Delete
-                    {selectedCount > 0 && <span className="badge text-bg-danger ms-2">{selectedCount}</span>}
-                </button>
-
-                <button
-                    className="btn btn-outline-secondary"
-                    disabled={noneSelected}
-                    onClick={() => setSelected({})}
-                    title="Clear selection"
-                >
-                    Clear
+                    {!noneSelected && <span className="badge text-bg-danger ms-2">{selectedIds.length}</span>}
                 </button>
 
                 <div className="flex-grow-1" />
                 <div className="text-muted small">Tip: <kbd>Shift</kbd> + click to select a range</div>
             </div>
 
-            <div className="table-responsive">
-                <table className="table table-sm table-hover table-striped align-middle mb-0">
-                    <thead className="table-light position-sticky top-0" style={{ zIndex: 1 }}>
-                    <tr>
-                        <th style={{ width: 44 }}>
-                            <input
-                                ref={selectAllRef}
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={allSelected && !noneSelected}
-                                onChange={(e) => onSelectAll(e.target.checked)}
-                                aria-label="Select all contacts"
-                                title="Select all"
-                            />
-                        </th>
-                        <th style={{ minWidth: 240 }}>Name</th>
-                        <th style={{ minWidth: 220 }}>Email</th>
-                        <th style={{ minWidth: 140 }}>Phone</th>
-                        <th style={{ width: 60 }} />
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    {rows.map((r, idx) => {
-                        const selectedRow = isSelected(r.id);
-                        const isHighlighted = r.id === highlightId;
-                        return (
-                            <tr
-                                key={r.id}
-                                className={
-                                    isHighlighted ? "table-success" :
-                                        selectedRow ? "table-primary" : undefined
-                                }
-                                style={{ cursor: "pointer" }}
-                            >
-                                <td>
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        checked={selectedRow}
-                                        onChange={(e) => onRowCheckboxChange(e, idx, r.id)}
-                                        aria-label={`Select ${r.fullName}`}
-                                    />
-                                </td>
-
-                                <td>
-                                    <button
-                                        type="button"
-                                        className="btn btn-link p-0 align-baseline text-decoration-none"
-                                        aria-label={`Open ${r.fullName} details`}
-                                        onClick={() => {
-                                            // save latest before navigating
-                                            persistSelection(selected);
-                                            nav(`/contacts/${r.id}`);
-                                        }}
-                                    >
-                                        {r.fullName}
-                                    </button>
-                                </td>
-
-                                <td className="text-truncate" style={{ maxWidth: 260 }}>
-                                    {r.email ?? <span className="text-muted">—</span>}
-                                </td>
-
-                                <td className="text-truncate" style={{ maxWidth: 180 }}>
-                                    {r.phone ?? <span className="text-muted">—</span>}
-                                </td>
-
-                                <td className="text-end">
-                                    <div className="btn-group btn-group-sm" role="group">
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary"
-                                            onClick={() => {
-                                                persistSelection(selected);
-                                                nav(`/contacts/${r.id}`);
-                                            }}
-                                            title="Edit"
-                                            aria-label="Edit"
-                                        >
-                                            <i className="bi bi-pencil-square" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-danger"
-                                            onClick={() => delContacts({ variables: { ids: [r.id] } })}
-                                            title="Delete"
-                                            aria-label="Delete"
-                                        >
-                                            <i className="bi bi-trash" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        );
-                    })}
-
-                    {!loading && rows.length === 0 && (
-                        <tr>
-                            <td colSpan={5} className="text-center text-muted py-4">
-                                No contacts yet. Click <strong>Add</strong> to create one.
-                            </td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
-            </div>
+            {/* Universal grid */}
+            <SmartTable
+                rows={rows}
+                columns={columns}
+                getRowId={(r) => r.id}
+                highlightedId={highlightedId}      // SmartTable shows + fades internally
+                selectionKey={SELECTION_KEY}       // persist selection across navs
+                onSelectionChange={setSelectedIds} // drives toolbar
+                selectAllAriaLabel="Select all contacts"
+            />
 
             {loading && <div className="text-muted py-2">Loading…</div>}
         </div>
     );
 }
-
-export default ContactsPage;

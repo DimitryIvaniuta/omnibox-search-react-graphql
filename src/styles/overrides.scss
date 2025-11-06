@@ -1,3 +1,9 @@
+html, body, #root {
+  height: 100%;
+}
+body {
+  overflow: hidden; /* no window scrollbar */
+}
 /* darker checkbox borders (Bootstrap 5) */
 .form-check-input {
   border-color: #495057 !important;          /* dark gray */
@@ -18,4 +24,61 @@
 
 .table tbody tr.row-highlight {
   animation: rowHighlightFade 3s ease-out forwards;
+}
+/* Page with a pinned toolbar + scrolling grid */
+.page-with-grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;     /* fill the viewport area provided by the shell */
+  min-height: 0;    /* allow children to shrink */
+  overflow: hidden; /* no extra scroll here */
+}
+
+.page-with-grid .toolbar {
+  flex: 0 0 auto;
+}
+
+.page-with-grid .grid-wrap {
+  flex: 1 1 auto;   /* take remaining space */
+  min-height: 0;    /* critical for inner scroll to work */
+  overflow: hidden; /* only the nested grid scrolls */
+}
+
+/* SmartTable scroll container: full width, own scrollbar */
+.smart-table-scroll {
+  height: 100%;
+  width: 100%;               /* stretch grid to 100% width */
+  overflow: auto;            /* only this element scrolls */
+}
+
+/* 5px custom scrollbar */
+.smart-table-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.smart-table-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+.smart-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Firefox */
+.smart-table-scroll {
+  scrollbar-width: thin; /* ~6px */
+  scrollbar-color: rgba(0,0,0,.3) transparent;
+}
+
+/* Make header stand out and stay above rows */
+.smart-table-scroll thead th {
+  border-bottom: 1px solid var(--bs-border-color) !important;
+  background: var(--bs-light) !important;
+  z-index: 2;
+  box-shadow: inset 0 -1px 0 var(--bs-border-color);
+}
+
+/* Optional: table width behavior (keeps columns aligned, truncates long text) */
+.smart-table-scroll table {
+  width: 100%;         /* stretch to full width */
+  table-layout: fixed; /* consistent widths; use text-truncate ellipses in cells */
 }
