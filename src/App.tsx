@@ -34,6 +34,7 @@ export default function App() {
 
     return (
         <ActionNotificationsProvider>
+
             <div className="d-flex flex-column min-vh-100">
                 {/* Skip link for a11y */}
                 <a
@@ -52,7 +53,7 @@ export default function App() {
                     <main
                         id="main-content"
                         ref={mainRef}
-                        className="flex-grow-1 p-3"
+                        className="flex-grow-1 p-3 pe-0"
                         tabIndex={-1}                    // focus target for skip link & route changes
                         aria-live="polite"               // announce content changes politely
                     >

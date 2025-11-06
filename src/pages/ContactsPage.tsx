@@ -19,7 +19,7 @@ export default function ContactsPage() {
 
     const rows = data?.contacts ?? [];
 
-    // Read highlightId from router state; SmartTable will fade it internally
+    // pickup one-time highlight id from router state
     const highlightedId = location.state?.highlightId ?? null;
     useEffect(() => {
         if (location.state) {
@@ -36,12 +36,14 @@ export default function ContactsPage() {
             key: "name",
             header: "Name",
             minWidth: 240,
+            // If your schema uses fullName, keep r.fullName; otherwise use r.name
             cell: (r) => (
                 <button
                     type="button"
-                    className="btn btn-link p-0 align-baseline text-decoration-none"
-                    aria-label={`Open ${r.fullName} details`}
+                    className="btn btn-link p-0 align-baseline text-decoration-none text-truncate"
+                    style={{ maxWidth: 560 }}
                     onClick={() => nav(`/contacts/${r.id}`)}
+                    aria-label={`Open ${r.fullName} details`}
                 >
                     {r.fullName}
                 </button>
@@ -51,12 +53,14 @@ export default function ContactsPage() {
             key: "email",
             header: "Email",
             minWidth: 220,
+            className: "text-truncate",
             cell: (r) => r.email ?? <span className="text-muted">—</span>,
         },
         {
             key: "phone",
             header: "Phone",
             minWidth: 140,
+            className: "text-truncate",
             cell: (r) => r.phone ?? <span className="text-muted">—</span>,
         },
         {
@@ -90,10 +94,11 @@ export default function ContactsPage() {
     ], [nav, delContacts]);
 
     return (
-        <div className="d-flex flex-column gap-3">
-            {/* Toolbar */}
+        // Make sure your outer shell gives this <main> full height: class "app-main" is styled in overrides.scss
+        <main className="app-main d-flex flex-column">
+            {/* pinned toolbar above the grid */}
             <div
-                className="toolbar d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
+                className="d-flex flex-wrap gap-2 align-items-center sticky-top bg-white py-2 border-bottom"
                 style={{ top: 56, zIndex: 1 }}
             >
                 <button className="btn btn-primary" onClick={() => nav("/contacts/new")}>
@@ -113,24 +118,22 @@ export default function ContactsPage() {
                 </button>
 
                 <div className="flex-grow-1" />
-                <div className="text-muted small">Tip: <kbd>Shift</kbd> + click to select a range</div>
+                <div className="text-muted small p-3">Tip: <kbd>Shift</kbd> + click to select a range</div>
             </div>
 
-            {/* the grid region fills remaining height; only it scrolls */}
-            <div className="grid-wrap">
+            {/* grid region takes remaining height and scrolls internally */}
+            <div className="grid-wrap flex-grow-1">
                 <SmartTable
                     rows={rows}
                     columns={columns}
                     getRowId={(r) => r.id}
-                    highlightedId={highlightedId}
-                    selectionKey={SELECTION_KEY}
-                    onSelectionChange={setSelectedIds}
-                    selectAllAriaLabel="Select all contacts"
-                    // no stickyOffset needed; header sticks at top of its own scroll container
+                    highlightedId={highlightedId}          // fades internally
+                    selectionKey={SELECTION_KEY}           // persist selection
+                    onSelectionChange={setSelectedIds}     // drives toolbar
                 />
             </div>
 
             {loading && <div className="text-muted py-2">Loading…</div>}
-        </div>
+        </main>
     );
 }
