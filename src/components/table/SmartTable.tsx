@@ -229,7 +229,7 @@ export default function SmartTable<T>({
                         display: "block",
                         overflowY: "auto",
                         overflowX: "hidden",
-                        maxHeight: `calc(70vh - 48px)`,
+                        maxHeight: `calc(75vh - 48px)`,
                         scrollbarWidth: "thin",
                         scrollbarColor: "rgba(0,0,0,.35) transparent",
                     } as React.CSSProperties}
