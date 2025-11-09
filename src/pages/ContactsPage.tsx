@@ -7,7 +7,7 @@ const SELECTION_KEY = "contacts:selectedIds";
 
 export default function ContactsPage() {
     const nav = useNavigate();
-    const location = useLocation() as Location & { state?: { highlightId?: string } };
+    const { state } = useLocation() as { state?: { highlightId?: string } };
 
     const { data, loading, refetch } = useContactsQuery({
         variables: { offset: 0, limit: 50 },
@@ -20,13 +20,15 @@ export default function ContactsPage() {
     const rows = data?.contacts ?? [];
 
     // pickup one-time highlight id from router state
-    const highlightedId = location.state?.highlightId ?? null;
+
+    const [highlightId, setHighlightId] = useState<string | null>(null);
+
     useEffect(() => {
-        if (location.state) {
-            window.history.replaceState(null, "", location.pathname + location.search);
+        if (state?.highlightId) {
+            setHighlightId(state.highlightId);
+            nav(".", { replace: true, state: {} });   // clear location.state
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [state, nav]);
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const noneSelected = selectedIds.length === 0;
@@ -36,7 +38,6 @@ export default function ContactsPage() {
             key: "name",
             header: "Name",
             minWidth: 240,
-            // If your schema uses fullName, keep r.fullName; otherwise use r.name
             cell: (r) => (
                 <button
                     type="button"
@@ -127,7 +128,7 @@ export default function ContactsPage() {
                     rows={rows}
                     columns={columns}
                     getRowId={(r) => r.id}
-                    highlightedId={highlightedId}          // fades internally
+                    highlightedId={highlightId}          // fades internally
                     selectionKey={SELECTION_KEY}           // persist selection
                     onSelectionChange={setSelectedIds}     // drives toolbar
                 />

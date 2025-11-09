@@ -18,44 +18,41 @@ export type SmartTableProps<T> = {
     columns: Column<T>[];
     getRowId?: RowIdGetter<T>;
 
-    /** An id to highlight (e.g., newly created/updated). Table fades it automatically. */
+    /** Row id to highlight (e.g., after create/update). */
     highlightedId?: string | null;
     /** Fade duration (ms) for the highlight. Default: 3000 */
     highlightDurationMs?: number;
 
-    /** Double-click row */
+    /** Row interactions */
     onRowDoubleClick?: (row: T) => void;
-    /** Optional callback: name/primary click (if you model a primary cell) */
-    onRowPrimaryClick?: (row: T) => void;
 
-    /** Persist selected ids in sessionStorage under this key; restore on mount/rows change. */
+    /** Selection persistence & bubbling */
     selectionKey?: string;
     /** Bubble selected ids (for toolbars) */
     onSelectionChange?: (ids: string[]) => void;
 
+    /** UI */
     selectAllAriaLabel?: string;
     stickyOffset?: number;
     tableClassName?: string;
 };
 
-export default function SmartTable<T>(
-    {
-        rows,
-        columns,
-        getRowId,
-        highlightedId,
-        highlightDurationMs = 3000,
-        onRowDoubleClick,
-        onRowPrimaryClick,
-        selectionKey,
-        onSelectionChange,
-        selectAllAriaLabel = "Select all rows",
-        stickyOffset = 0,
-        tableClassName = "table table-sm table-hover table-striped align-middle mb-0",
-    }: SmartTableProps<T>) {
+export default function SmartTable<T>({
+                                          rows,
+                                          columns,
+                                          getRowId,
+                                          highlightedId,
+                                          highlightDurationMs = 3000,
+                                          onRowDoubleClick,
+                                          selectionKey,
+                                          onSelectionChange,
+                                          selectAllAriaLabel = "Select all rows",
+                                          stickyOffset = 0,
+                                          tableClassName = "table table-sm table-hover table-striped align-middle mb-0",
+                                      }: SmartTableProps<T>) {
     const rowId: RowIdGetter<T> = getRowId ?? ((row) => (row as any).id as string);
 
-    // ---------- highlight (internal fade) ----------
+    /* ---------- highlight (auto-fade) ---------- */
     const [liveHighlightId, setLiveHighlightId] = useState<string | null>(null);
     useEffect(() => {
         if (!highlightedId) return;
@@ -64,62 +61,76 @@ export default function SmartTable<T>(
         return () => window.clearTimeout(t);
     }, [highlightedId, highlightDurationMs]);
 
-    // ---------- selection ----------
+    /* ---------- selection ---------- */
     const [selected, setSelected] = useState<Record<string, boolean>>({});
     const [lastIndex, setLastIndex] = useState<number | null>(null);
     const selectAllRef = useRef<HTMLInputElement>(null);
-    const didHydrateRef = useRef<boolean>(!selectionKey);
 
+    // stable ids for current rows
     const ids = useMemo(() => rows.map(rowId), [rows, rowId]);
     const selectedIds = useMemo(() => ids.filter((id) => selected[id]), [ids, selected]);
     const selCount = selectedIds.length;
     const allSelected = selCount > 0 && selCount === ids.length;
     const noneSelected = selCount === 0;
 
+    // tri-state checkbox (pure DOM prop; does NOT cause renders)
     useEffect(() => {
         if (selectAllRef.current) {
             selectAllRef.current.indeterminate = !noneSelected && !allSelected;
         }
     }, [noneSelected, allSelected]);
 
-    // hydrate from storage (if selectionKey provided)
+    // hydrate selection from sessionStorage EXACTLY ONCE (per key), when rows are present
+    const hydratedRef = useRef(false);
     useEffect(() => {
         if (!selectionKey) return;
-        if (!rows.length) return;
-        const raw = sessionStorage.getItem(selectionKey);
-        if (!raw) {
-            didHydrateRef.current = true;
-            return;
-        }
-        let stored: string[] = [];
-        try { stored = JSON.parse(raw) as string[]; } catch { didHydrateRef.current = true; return; }
-        setSelected((prev) => {
-            if (!stored.length) return prev;
-            let changed = false;
-            const next = { ...prev };
-            for (let i = 0; i < rows.length; i++) {
-                const id = rowId(rows[i], i);
-                if (next[id] === undefined && stored.includes(id)) {
-                    next[id] = true;
-                    changed = true;
-                }
-            }
-            return changed ? next : prev;
-        });
-        didHydrateRef.current = true;
-    }, [rows, rowId, selectionKey]);
+        if (hydratedRef.current) return;
+        if (ids.length === 0) return; // wait until first data batch
 
-    // persist after hydration
+        hydratedRef.current = true;
+        try {
+            const raw = sessionStorage.getItem(selectionKey);
+            if (!raw) return;
+            const stored = JSON.parse(raw) as string[];
+            if (!Array.isArray(stored) || stored.length === 0) return;
+
+            setSelected((prev) => {
+                const next = { ...prev };
+                let changed = false;
+                for (const id of ids) {
+                    if (stored.includes(id) && !next[id]) {
+                        next[id] = true;
+                        changed = true;
+                    }
+                }
+                return changed ? next : prev;
+            });
+        } catch {
+            // ignore malformed storage
+        }
+    }, [selectionKey, ids.length, ids]);
+
+    const prevSelStrRef = useRef<string>("");
+
+    // persist to storage & notify parent ONLY when the set of ids changes
+    const onSelectionChangeRef = useRef(onSelectionChange);
     useEffect(() => {
-        if (!selectionKey) return;
-        if (!didHydrateRef.current) return;
-        sessionStorage.setItem(selectionKey, JSON.stringify(selectedIds));
-    }, [selectionKey, selectedIds]);
+        onSelectionChangeRef.current = onSelectionChange;
+    }, [onSelectionChange]);
 
     // bubble selection
     useEffect(() => {
-        onSelectionChange?.(selectedIds);
-    }, [selectedIds, onSelectionChange]);
+        const curSelStr = JSON.stringify(selectedIds); // value snapshot (order preserved)
+
+        // if nothing changed by value, do nothing
+        if (curSelStr === prevSelStrRef.current) return;
+
+        prevSelStrRef.current = curSelStr;
+
+        // now notify & persist once per actual change
+        onSelectionChangeRef.current?.(selectedIds);
+        if (selectionKey) sessionStorage.setItem(selectionKey, curSelStr);
+    }, [selectedIds, selectionKey]);
 
     const toggleId = useCallback((id: string, checked: boolean) => {
         setSelected((prev) => ({ ...prev, [id]: checked }));
@@ -163,58 +174,27 @@ export default function SmartTable<T>(
         [ids]
     );
 
-    // ---------- render helpers ----------
-    const headerCells = useMemo(
-        () =>
-            columns.map((col) => (
-                <th
-                    style={{
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 2,
-                        background: "var(--bs-light)", // solid background so rows never “shine through”
-                        width: col.width,
-                        minWidth: col.minWidth
-                    }}
-                    key={col.key}
-                    className={col.className}
-                >
-                    {col.header}
-                </th>
-            )),
-        [columns]
-    );
-
-    const renderCell = useCallback((col: Column<T>, row: T, index: number) => {
-        if (col.cell) return col.cell(row, index);
-        if (col.accessor) return String(col.accessor(row) ?? "");
-        if (col.accessorKey) return String(row[col.accessorKey] ?? "");
-        return null;
-    }, []);
-
     return (
-        <div
-            className="smart-table-wrap"         // (no need for .table-responsive here)
-            style={{ maxHeight: "60vh", overflow: "hidden" }}
-        >
-            <table className={tableClassName} style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate" }}>
-                {/* 2) Header never scrolls because the body below is the only scroller */}
+        <div className="smart-table-wrap" style={{ maxHeight: "60vh", overflow: "hidden" }}>
+            <table
+                className={tableClassName}
+                style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate" }}
+            >
                 <thead
                     className="table-light"
                     style={{
-                        display: "table",              // keep column widths aligned with tbody rows
+                        display: "table",
                         width: "100%",
                         tableLayout: "fixed",
-                        position: "sticky",            // stays pinned if the page itself scrolls a bit
+                        position: "sticky",
                         top: stickyOffset || 0,
                         zIndex: 2,
                         background: "var(--bs-light)",
-                        // borderBottom: "1px solid var(--bs-border-color)",
-                        height: 48,              // used just for consistent layout
+                        height: 48,
                     }}
                 >
                 <tr>
-                    <th style={{ width: 44 }}>
+                    <th style={{ width: 44, maxWidth: 44 }}>
                         <input
                             ref={selectAllRef}
                             className="form-check-input"
@@ -226,33 +206,30 @@ export default function SmartTable<T>(
                         />
                     </th>
 
-                    {columns.map(col => (
+                    {columns.map((col) => (
                         <th
                             key={col.key}
                             className={col.className}
-                            style={{
-                                width: col.width,
-                                minWidth: col.minWidth,
-                                background: "var(--bs-light)",
-                            }}
+                            style={{ width: col.width, minWidth: col.minWidth, background: "var(--bs-light)" }}
                         >
                             {col.header}
                         </th>
                     ))}
 
-                    <th style={{ width: 60 }} />
+                    <th
+                        className="w-fill"
+                        style={{ width: "auto", minWidth: 0 }}
+                        aria-hidden="true"
+                    />
                 </tr>
                 </thead>
 
-                {/* 3) Only tbody scrolls; scrollbar never overlaps the header */}
                 <tbody
                     style={{
                         display: "block",
                         overflowY: "auto",
                         overflowX: "hidden",
-                        // available space under the header within the wrapper
-                        maxHeight: `calc(60vh - 48px)`,
-                        // optional: slim, nice scrollbar (WebKit + Firefox)
+                        maxHeight: `calc(70vh - 48px)`,
                         scrollbarWidth: "thin",
                         scrollbarColor: "rgba(0,0,0,.35) transparent",
                     } as React.CSSProperties}
@@ -261,13 +238,15 @@ export default function SmartTable<T>(
                     const id = rowId(row, idx);
                     const isSelected = selected[id];
                     const isHighlighted = liveHighlightId === id;
-
+                    if(isHighlighted){
+                        console.log(`Highlighted: ${id} is selected: ${isHighlighted}`);
+                    }
                     return (
                         <tr
                             key={id}
                             // each row renders as a table to align with thead widths
                             style={{ display: "table", width: "100%", tableLayout: "fixed", cursor: "pointer" }}
-                            className={isHighlighted ? "row-highlight" : isSelected ? "table-primary" : undefined}
+                            className={isHighlighted ? "table-success" : isSelected ? "table-primary" : undefined}
                             onDoubleClick={onRowDoubleClick ? () => onRowDoubleClick(row) : undefined}
                         >
                             <td style={{ width: 44 }}>
@@ -280,17 +259,26 @@ export default function SmartTable<T>(
                                 />
                             </td>
 
-                            {columns.map(col => (
+                            {columns.map((col) => (
                                 <td
                                     key={col.key}
                                     className={col.className}
-                                    style={{ width: col.width, minWidth: col.minWidth }}
-                                >
-                                    {renderCell(col, row, idx)}
+                                    style={{ width: col.width, minWidth: col.minWidth }}>
+                                    {col.cell
+                                        ? col.cell(row, idx)
+                                        : col.accessor
+                                            ? String(col.accessor(row) ?? "")
+                                            : col.accessorKey
+                                                ? String((row as any)[col.accessorKey] ?? "")
+                                                : null}
                                 </td>
                             ))}
 
-                            <td className="text-end" style={{ width: 60 }} />
+                            <td
+                                className="w-fill"
+                                style={{ width: "auto", minWidth: 0 }}
+                                aria-hidden="true"
+                            />
                         </tr>
                     );
                 })}
