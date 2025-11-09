@@ -1,0 +1,61 @@
+
+//.omnibox-group { transition: box-shadow .15s ease; }
+//.omnibox-input:focus { box-shadow: none; }
+//.omnibox-group:focus-within { box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); }
+//.omnibox-label { border-color: var(--bs-border-color); color: var(--bs-body-color); }
+//.omnibox-menu { border-radius: 1rem; overflow: hidden; }
+
+.omnibox .omnibox-group { transition: box-shadow .15s ease; }
+.omnibox .omnibox-input:focus {
+  box-shadow: none;
+}
+.omnibox .omnibox-group:focus-within {
+  box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); /* subtle primary ring */
+}
+
+.omnibox .omnibox-label {
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+.omnibox .omnibox-menu {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+#omnibox-dropdown {
+  scrollbar-width: thin;                        /* slimmer */
+  scrollbar-color: rgba(0,0,0,.35) transparent; /* thumb / track */
+}
+
+/* Chromium / WebKit */
+#omnibox-dropdown::-webkit-scrollbar {
+  width: 6px;            /* slim */
+}
+#omnibox-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+#omnibox-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,.35);
+  border-radius: 8px;     /* pill thumb */
+  border: 2px solid transparent; /* creates a little inset, nicer look */
+  background-clip: content-box;
+}
+#omnibox-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0,0,0,.45);
+}
+#omnibox-dropdown::-webkit-scrollbar-thumb:active {
+  background-color: rgba(0,0,0,.55);
+}
+
+/* When the input group is focused, turn both caps' borders to primary */
+.omnibox-group:focus-within .omnibox-label,
+.omnibox-group:focus-within .omnibox-clear-wrap,
+.omnibox-group:focus-within .omnibox-input {
+  border-color: var(--bs-primary) !important;
+}
+
+/* Keep the soft focus halo you already have */
+.omnibox-group:focus-within {
+  box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+}

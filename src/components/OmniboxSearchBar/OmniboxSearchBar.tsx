@@ -2,18 +2,10 @@ import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
 import clsx from "clsx";
 import { useOmniboxQuery } from "@/generated/omnibox/graphql";
 import { omniboxClient } from "@/apollo/omniboxClient";
+import "./OmniboxSearchBar.scss";
 
-/** Discriminated union for result kind */
 type Kind = "contact" | "listing" | "transaction" | "product" | "mailing" | "referral";
-
-/** Flat hit used by the UI and the onPick callback */
-export type OmniboxHit = {
-    kind: Kind;
-    id: string;
-    title: string;
-    subtitle?: string;
-    score?: number;
-};
+export type OmniboxHit = { kind: Kind; id: string; title: string; subtitle?: string; score?: number };
 
 type Props = {
     placeholder?: string;
@@ -21,27 +13,24 @@ type Props = {
     onPick: (hit: OmniboxHit) => void;
 };
 
-/* === Icon: Search-house (inherits currentColor) === */
+/* Icon: Search-house */
 function SearchHouseIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
-        <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            {...props}
-        >
-            {/* house */}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
             <path d="M3 11.5L12 4l9 7.5" />
             <path d="M5 10.5V20h6v-5h2v5h6v-9.5" />
-            {/* magnifier */}
             <circle cx="16.5" cy="8.5" r="2.25" />
             <line x1="18.2" y1="10.2" x2="20.2" y2="12.2" />
+        </svg>
+    );
+}
+
+/* Icon: small × (close) */
+function XIcon(props: React.SVGProps<SVGSVGElement>) {
+    return (
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+            <line x1="5" y1="5" x2="15" y2="15" />
+            <line x1="15" y1="5" x2="5" y2="15" />
         </svg>
     );
 }
@@ -67,7 +56,7 @@ export default function OmniboxSearchBar({
         return () => window.clearTimeout(t);
     }, [q]);
 
-    // Omnibox query (correct client)
+    // Omnibox query
     const { data, loading } = useOmniboxQuery({
         variables: { q: dq, limitPerGroup },
         skip: dq.length === 0,
@@ -80,13 +69,7 @@ export default function OmniboxSearchBar({
         const hits: OmniboxHit[] = [];
         const push = (kind: Kind, arr?: any[]) =>
             arr?.forEach((x) => {
-                const id =
-                    x.contactId ||
-                    x.listingId ||
-                    x.transactionId ||
-                    x.productId ||
-                    x.mailingId ||
-                    x.referralId;
+                const id = x.contactId || x.listingId || x.transactionId || x.productId || x.mailingId || x.referralId;
                 if (!id) return;
                 hits.push({
                     kind,
@@ -107,24 +90,17 @@ export default function OmniboxSearchBar({
         }
 
         const groups: Record<Kind, OmniboxHit[]> = {
-            contact: [],
-            listing: [],
-            transaction: [],
-            product: [],
-            mailing: [],
-            referral: [],
+            contact: [], listing: [], transaction: [], product: [], mailing: [], referral: [],
         };
         for (const h of hits) groups[h.kind].push(h);
 
         const order: Kind[] = ["contact", "listing", "transaction", "product", "mailing", "referral"];
-        const labeled = order
-            .map((k) => ({ label: labelOf(k), kind: k, rows: groups[k] }))
-            .filter((g) => g.rows.length > 0);
+        const labeled = order.map((k) => ({ label: labelOf(k), kind: k, rows: groups[k] })).filter((g) => g.rows.length > 0);
 
         return { flat: hits, grouped: labeled };
     }, [data]);
 
-    // Open while typing, close when cleared
+    // Open while typing; close when cleared
     const onChangeInput: React.ChangeEventHandler<HTMLInputElement> = (e) => {
         const val = e.target.value;
         setQ(val);
@@ -132,7 +108,6 @@ export default function OmniboxSearchBar({
         setOpen(hasText);
         if (!hasText) setActiveIndex(-1);
     };
-
     const onFocusInput: React.FocusEventHandler<HTMLInputElement> = () => {
         if (q.trim()) setOpen(true);
     };
@@ -186,24 +161,20 @@ export default function OmniboxSearchBar({
         }
     };
 
-    // Map global index to grouped index for rendering
     const indexFor = (gi: number, ri: number) =>
         grouped.slice(0, gi).reduce((acc, g) => acc + g.rows.length, 0) + ri;
 
-    /* ===== Dropdown width: exactly input width; positioned after label ===== */
+    /* Dropdown width = input width, positioned after label */
     const [dropDims, setDropDims] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
-
     const recomputeDropdown = () => {
         const labelW = labelRef.current?.offsetWidth ?? 0;
         const inputW = inputRef.current?.offsetWidth ?? 0;
-        setDropDims({ left: labelW, width: inputW - 5 });
+        setDropDims({ left: labelW - 40, width: inputW + 80 });
     };
-
     useLayoutEffect(() => {
         if (!open) return;
         recomputeDropdown();
 
-        // Track resize of the wrapper (more robust than window resize alone)
         const obs = new (window as any).ResizeObserver(() => recomputeDropdown());
         if (obs && wrapRef.current) obs.observe(wrapRef.current);
 
@@ -214,28 +185,38 @@ export default function OmniboxSearchBar({
             window.removeEventListener("resize", onWinResize);
             obs?.disconnect?.();
         };
-        // re-evaluate when dropdown opens or results change (height may affect scrollbar)
-    }, [open, dq]);
+    }, [open, dq, q]);
+
+    const hasText = q.trim().length > 0;
+    const clear = () => {
+        setQ("");
+        setOpen(false);
+        setActiveIndex(-1);
+        inputRef.current?.focus();
+    };
 
     return (
-        <div
-            ref={wrapRef}
-            className="omnibox mx-auto position-relative"
-            style={{ minWidth: 360, maxWidth: 720 }}
-        >
-            {/* Pill label + input */}
+        <div ref={wrapRef} className="omnibox mx-auto position-relative" style={{ minWidth: 360, maxWidth: 720 }}>
+            {/* Pill group: icon label | input | clear button (shows only when text present) */}
             <div className="input-group shadow-sm rounded-pill omnibox-group">
-        <span
-            ref={labelRef}
-            className="input-group-text bg-white border-end-0 rounded-start-pill omnibox-label"
-            aria-label="Search"
-        >
+
+                {/* Left label (icon) */}
+                <span
+                    ref={labelRef}
+                    className="input-group-text bg-white border-end-0 rounded-start-pill omnibox-label"
+                    aria-label="Search"
+                >
           <SearchHouseIcon className="me-1" />
           <span className="visually-hidden">Search</span>
         </span>
+
+                {/* The input: when clear button is visible, remove right rounding to keep pill shape consistent */}
                 <input
                     ref={inputRef}
-                    className="form-control border-start-0 rounded-end-pill ps-1 omnibox-input"
+                    className={clsx(
+                        "form-control border-start-0 ps-1 omnibox-input",
+                        hasText ? "border-end-0 rounded-0" : "rounded-end-pill"
+                    )}
                     placeholder={placeholder}
                     value={q}
                     onFocus={onFocusInput}
@@ -247,9 +228,31 @@ export default function OmniboxSearchBar({
                     aria-controls="omnibox-dropdown"
                     aria-autocomplete="list"
                 />
+
+                {/* Trailing clear control — keeps the pill rounded on the right */}
+                <span
+                    className={clsx(
+                        "input-group-text bg-white rounded-end-pill omnibox-clear-wrap p-0", // <-- add omnibox-clear-wrap
+                        hasText ? "border-start-0" : "border-0"
+                    )}
+                    aria-hidden={!hasText}
+                    style={{ overflow: "hidden" }}
+                >
+          {hasText && (
+              <button
+                  type="button"
+                  className="btn btn-link text-muted px-3 py-2 omnibox-clear-btn"
+                  onClick={clear}
+                  aria-label="Clear search"
+                  title="Clear"
+              >
+                  <XIcon />
+              </button>
+          )}
+        </span>
             </div>
 
-            {/* Dropdown: category label + records on next lines */}
+            {/* Dropdown: category header + records on next lines */}
             {open && (
                 <div
                     id="omnibox-dropdown"
@@ -289,13 +292,11 @@ export default function OmniboxSearchBar({
                                                 isActive && "active"
                                             )}
                                             onMouseEnter={() => setActiveIndex(flatIdx)}
-                                            onClick={() => pick(x)}
+                                            onClick={() => onPick(x)}
                                             title={x.subtitle ?? ""}
                                         >
                                             <span className="fw-semibold text-truncate">{x.title}</span>
-                                            {x.subtitle && (
-                                                <small className="text-muted text-truncate">{x.subtitle}</small>
-                                            )}
+                                            {x.subtitle && <small className="text-muted text-truncate">{x.subtitle}</small>}
                                         </button>
                                     );
                                 })}
@@ -303,34 +304,17 @@ export default function OmniboxSearchBar({
                         ))}
                 </div>
             )}
-
-            {/* Minimal local styles (works with Bootstrap) */}
-            <style>{`
-        .omnibox-group { transition: box-shadow .15s ease; }
-        .omnibox-input:focus { box-shadow: none; }
-        .omnibox-group:focus-within { box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); }
-        .omnibox-label { border-color: var(--bs-border-color); color: var(--bs-body-color); }
-        .omnibox-label svg { display: block; }
-        .omnibox-menu { border-radius: 1rem; overflow: hidden; }
-      `}</style>
         </div>
     );
 }
 
-/* Helpers */
 function labelOf(k: Kind): string {
     switch (k) {
-        case "contact":
-            return "Contacts";
-        case "listing":
-            return "Listings";
-        case "transaction":
-            return "Transactions";
-        case "product":
-            return "Products";
-        case "mailing":
-            return "Mailings";
-        case "referral":
-            return "Referrals";
+        case "contact": return "Contacts";
+        case "listing": return "Listings";
+        case "transaction": return "Transactions";
+        case "product": return "Products";
+        case "mailing": return "Mailings";
+        case "referral": return "Referrals";
     }
 }
