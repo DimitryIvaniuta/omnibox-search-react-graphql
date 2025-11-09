@@ -17,21 +17,11 @@ export type SmartTableProps<T> = {
     rows: T[];
     columns: Column<T>[];
     getRowId?: RowIdGetter<T>;
-
-    /** Row id to highlight (e.g., after create/update). */
     highlightedId?: string | null;
-    /** Fade duration (ms) for the highlight. Default: 3000 */
     highlightDurationMs?: number;
-
-    /** Row interactions */
     onRowDoubleClick?: (row: T) => void;
-
-    /** Selection persistence & bubbling */
     selectionKey?: string;
-    /** Bubble selected ids (for toolbars) */
     onSelectionChange?: (ids: string[]) => void;
-
-    /** UI */
     selectAllAriaLabel?: string;
     stickyOffset?: number;
     tableClassName?: string;
@@ -52,6 +42,10 @@ export default function SmartTable<T>({
                                       }: SmartTableProps<T>) {
     const rowId: RowIdGetter<T> = getRowId ?? ((row) => (row as any).id as string);
 
+    // >>> Unified sizing <<<
+    const WRAP_VH = 75;  // grid viewport height
+    const HEADER_H = 48; // sticky thead height (px)
+
     /* ---------- highlight (auto-fade) ---------- */
     const [liveHighlightId, setLiveHighlightId] = useState<string | null>(null);
     useEffect(() => {
@@ -66,34 +60,27 @@ export default function SmartTable<T>({
     const [lastIndex, setLastIndex] = useState<number | null>(null);
     const selectAllRef = useRef<HTMLInputElement>(null);
 
-    // stable ids for current rows
-    const ids = useMemo(() => rows.map(rowId), [rows, rowId]);
+    const ids = useMemo(() => rows.map(rowId), [rows]); // rowId assumed stable
     const selectedIds = useMemo(() => ids.filter((id) => selected[id]), [ids, selected]);
     const selCount = selectedIds.length;
     const allSelected = selCount > 0 && selCount === ids.length;
     const noneSelected = selCount === 0;
 
-    // tri-state checkbox (pure DOM prop; does NOT cause renders)
     useEffect(() => {
         if (selectAllRef.current) {
             selectAllRef.current.indeterminate = !noneSelected && !allSelected;
         }
     }, [noneSelected, allSelected]);
 
-    // hydrate selection from sessionStorage EXACTLY ONCE (per key), when rows are present
     const hydratedRef = useRef(false);
     useEffect(() => {
-        if (!selectionKey) return;
-        if (hydratedRef.current) return;
-        if (ids.length === 0) return; // wait until first data batch
-
+        if (!selectionKey || hydratedRef.current || ids.length === 0) return;
         hydratedRef.current = true;
         try {
             const raw = sessionStorage.getItem(selectionKey);
             if (!raw) return;
             const stored = JSON.parse(raw) as string[];
             if (!Array.isArray(stored) || stored.length === 0) return;
-
             setSelected((prev) => {
                 const next = { ...prev };
                 let changed = false;
@@ -105,49 +92,35 @@ export default function SmartTable<T>({
                 }
                 return changed ? next : prev;
             });
-        } catch {
-            // ignore malformed storage
-        }
-    }, [selectionKey, ids.length, ids]);
+        } catch { /* ignore */ }
+    }, [selectionKey, ids]);
+
+    const onSelectionChangeRef = useRef(onSelectionChange);
+    useEffect(() => { onSelectionChangeRef.current = onSelectionChange; }, [onSelectionChange]);
 
     const prevSelStrRef = useRef<string>("");
-
-    // persist to storage & notify parent ONLY when the set of ids changes
-    const onSelectionChangeRef = useRef(onSelectionChange);
     useEffect(() => {
-        onSelectionChangeRef.current = onSelectionChange;
-    }, [onSelectionChange]);
-
-    // bubble selection
-    useEffect(() => {
-        const curSelStr = JSON.stringify(selectedIds); // value snapshot (order preserved)
-
-        // if nothing changed by value, do nothing
-        if (curSelStr === prevSelStrRef.current) return;
-
-        prevSelStrRef.current = curSelStr;
-
-        // now notify & persist once per actual change
+        const cur = JSON.stringify(selectedIds);
+        if (cur === prevSelStrRef.current) return;
+        prevSelStrRef.current = cur;
         onSelectionChangeRef.current?.(selectedIds);
-        if (selectionKey) sessionStorage.setItem(selectionKey, curSelStr);
+        if (selectionKey) sessionStorage.setItem(selectionKey, cur);
     }, [selectedIds, selectionKey]);
 
     const toggleId = useCallback((id: string, checked: boolean) => {
-        setSelected((prev) => ({ ...prev, [id]: checked }));
+        setSelected((p) => ({ ...p, [id]: checked }));
     }, []);
-
     const toggleRange = useCallback(
-        (fromIdx: number, toIdx: number, checked: boolean) => {
-            const [start, end] = fromIdx < toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
-            setSelected((prev) => {
-                const next = { ...prev };
+        (from: number, to: number, checked: boolean) => {
+            const [start, end] = from < to ? [from, to] : [to, from];
+            setSelected((p) => {
+                const next = { ...p };
                 for (let i = start; i <= end; i++) next[ids[i]] = checked;
                 return next;
             });
         },
         [ids]
     );
-
     const onRowCheckboxChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>, index: number, id: string) => {
             const checked = e.currentTarget.checked;
@@ -158,14 +131,9 @@ export default function SmartTable<T>({
         },
         [lastIndex, toggleRange, toggleId]
     );
-
     const onSelectAll = useCallback(
         (checked: boolean) => {
-            if (!checked) {
-                setSelected({});
-                setLastIndex(null);
-                return;
-            }
+            if (!checked) { setSelected({}); setLastIndex(null); return; }
             const next: Record<string, boolean> = {};
             for (const id of ids) next[id] = true;
             setSelected(next);
@@ -175,7 +143,8 @@ export default function SmartTable<T>({
     );
 
     return (
-        <div className="smart-table-wrap" style={{ maxHeight: "60vh", overflow: "hidden" }}>
+        // Wrapper: SAME height we subtract from below; wrapper itself does not scroll
+        <div className="smart-table-wrap" style={{ height: `${WRAP_VH}vh`, overflow: "hidden" }}>
             <table
                 className={tableClassName}
                 style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate" }}
@@ -190,7 +159,7 @@ export default function SmartTable<T>({
                         top: stickyOffset || 0,
                         zIndex: 2,
                         background: "var(--bs-light)",
-                        height: 48,
+                        height: HEADER_H,
                     }}
                 >
                 <tr>
@@ -216,35 +185,30 @@ export default function SmartTable<T>({
                         </th>
                     ))}
 
-                    <th
-                        className="w-fill"
-                        style={{ width: "auto", minWidth: 0 }}
-                        aria-hidden="true"
-                    />
+                    {/* flexible filler column */}
+                    <th className="w-fill" style={{ width: "auto", minWidth: 0 }} aria-hidden="true" />
                 </tr>
                 </thead>
 
+                {/* tbody is the ONLY scroller. Height matches wrapper - header */}
                 <tbody
                     style={{
                         display: "block",
                         overflowY: "auto",
                         overflowX: "hidden",
-                        maxHeight: `calc(75vh - 48px)`,
+                        height: `calc(${WRAP_VH}vh - ${HEADER_H}px)`,
                         scrollbarWidth: "thin",
                         scrollbarColor: "rgba(0,0,0,.35) transparent",
                     } as React.CSSProperties}
                 >
                 {rows.map((row, idx) => {
                     const id = rowId(row, idx);
-                    const isSelected = selected[id];
+                    const isSelected = !!selected[id];
                     const isHighlighted = liveHighlightId === id;
-                    if(isHighlighted){
-                        console.log(`Highlighted: ${id} is selected: ${isHighlighted}`);
-                    }
+
                     return (
                         <tr
                             key={id}
-                            // each row renders as a table to align with thead widths
                             style={{ display: "table", width: "100%", tableLayout: "fixed", cursor: "pointer" }}
                             className={isHighlighted ? "table-success" : isSelected ? "table-primary" : undefined}
                             onDoubleClick={onRowDoubleClick ? () => onRowDoubleClick(row) : undefined}
@@ -260,10 +224,7 @@ export default function SmartTable<T>({
                             </td>
 
                             {columns.map((col) => (
-                                <td
-                                    key={col.key}
-                                    className={col.className}
-                                    style={{ width: col.width, minWidth: col.minWidth }}>
+                                <td key={col.key} className={col.className} style={{ width: col.width, minWidth: col.minWidth }}>
                                     {col.cell
                                         ? col.cell(row, idx)
                                         : col.accessor
@@ -274,11 +235,8 @@ export default function SmartTable<T>({
                                 </td>
                             ))}
 
-                            <td
-                                className="w-fill"
-                                style={{ width: "auto", minWidth: 0 }}
-                                aria-hidden="true"
-                            />
+                            {/* flexible filler cell */}
+                            <td className="w-fill" style={{ width: "auto", minWidth: 0 }} aria-hidden="true" />
                         </tr>
                     );
                 })}
