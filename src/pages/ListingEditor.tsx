@@ -80,9 +80,20 @@ export default function ListingEditor() {
         [form.priceAmount, form.priceCurrency]
     );
 
+    const isSaving = () => creating
+        || updating;
+
+    const isValid = () =>
+        form.title.trim().length > 0
+        && form.mlsId.trim().length > 0
+        && form.contactId; // contact required + non-empty title
+
+
     const onSubmit: React.FormEventHandler = (e) => {
         e.preventDefault();
-
+        if(!isValid()) {
+            return false;
+        }
         // Guard minimal fields
         if (!form.title.trim()) return;
 
@@ -131,7 +142,9 @@ export default function ListingEditor() {
             <form className="flex-grow-1 min-h-0 overflow-auto px-3 py-3" onSubmit={onSubmit}>
                 <div className="row g-3">
                     <div className="col-md-6">
-                        <label className="form-label">Title</label>
+                        <label className="form-label">Title
+                            {!form.title.trim() && <span className="text-danger small mt-1"> required*</span>}
+                        </label>
                         <input
                             className="form-control"
                             value={form.title}
@@ -150,7 +163,9 @@ export default function ListingEditor() {
                     </div>
 
                     <div className="col-md-4">
-                        <label className="form-label">MLS ID</label>
+                        <label className="form-label">MLS ID
+                            {!form.mlsId.trim() && <span className="text-danger small mt-1"> required*</span>}
+                        </label>
                         <input
                             className="form-control"
                             value={form.mlsId}
@@ -159,7 +174,11 @@ export default function ListingEditor() {
                     </div>
 
                     <div className="col-md-8">
-                        <label className="form-label">Contact</label>
+                        <label className="form-label">Contact
+                            {!form.contactId && <span className="text-danger small mt-1"> required*</span>}
+                        </label>
+
+
                         {/* Debounced omnibox-backed picker; stores ID only */}
                         <ContactPicker
                             value={form.contactId}
@@ -189,7 +208,10 @@ export default function ListingEditor() {
                     </div>
 
                     <div className="col-12">
-                        <button className="btn btn-primary" type="submit" disabled={creating || updating}>
+                        <button className="btn btn-primary"
+                                type="submit"
+                                disabled={isSaving() || !isValid()}
+                        >
                             {creating || updating ? "Saving…" : "Save"}
                         </button>
                     </div>
