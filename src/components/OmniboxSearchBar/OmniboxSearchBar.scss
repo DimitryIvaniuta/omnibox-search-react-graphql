@@ -1,61 +1,51 @@
-
-//.omnibox-group { transition: box-shadow .15s ease; }
-//.omnibox-input:focus { box-shadow: none; }
-//.omnibox-group:focus-within { box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); }
-//.omnibox-label { border-color: var(--bs-border-color); color: var(--bs-body-color); }
-//.omnibox-menu { border-radius: 1rem; overflow: hidden; }
-
-.omnibox .omnibox-group { transition: box-shadow .15s ease; }
-.omnibox .omnibox-input:focus {
-  box-shadow: none;
-}
-.omnibox .omnibox-group:focus-within {
-  box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); /* subtle primary ring */
+/* Ensure the group can host an overlay */
+.omnibox-group {
+  position: relative;
+  border-radius: 50rem; /* pill */
 }
 
-.omnibox .omnibox-label {
-  border-color: var(--bs-border-color);
-  color: var(--bs-body-color);
+/* Animated primary border rail (grows left → right) */
+.omnibox-group::after {
+  content: "";
+  position: absolute;
+  inset: -2px;                     /* extend by border width */
+  border: 2px solid var(--bs-primary);
+  border-radius: 50rem;
+  pointer-events: none;            /* never blocks clicks */
+  transform: scaleX(0);            /* hidden initially */
+  transform-origin: left center;   /* animate from left */
+  transition: transform 320ms ease;
 }
 
-.omnibox .omnibox-menu {
-  border-radius: 1rem;
-  overflow: hidden;
+/* When input (or clear button) is focused, reveal the rail */
+.omnibox-group:focus-within::after {
+  transform: scaleX(1);
 }
 
+/* Hide the original per-segment borders so the rail looks continuous */
+.omnibox-group:focus-within .omnibox-label,
+.omnibox-group:focus-within .omnibox-input,
+.omnibox-group:focus-within .omnibox-clear-wrap {
+  border-color: transparent !important;
+}
+
+/* Optional: subtle glow while focused (keep if you like) */
+.omnibox-group:focus-within {
+  //box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .15);
+}
+
+/* Keep your existing styling for slim dropdown scrollbar, etc. */
 #omnibox-dropdown {
-  scrollbar-width: thin;                        /* slimmer */
-  scrollbar-color: rgba(0,0,0,.35) transparent; /* thumb / track */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.35) transparent;
 }
-
-/* Chromium / WebKit */
-#omnibox-dropdown::-webkit-scrollbar {
-  width: 6px;            /* slim */
-}
-#omnibox-dropdown::-webkit-scrollbar-track {
-  background: transparent;
-}
+#omnibox-dropdown::-webkit-scrollbar { width: 6px; }
+#omnibox-dropdown::-webkit-scrollbar-track { background: transparent; }
 #omnibox-dropdown::-webkit-scrollbar-thumb {
   background-color: rgba(0,0,0,.35);
-  border-radius: 8px;     /* pill thumb */
-  border: 2px solid transparent; /* creates a little inset, nicer look */
+  border-radius: 8px;
+  border: 2px solid transparent;
   background-clip: content-box;
 }
-#omnibox-dropdown::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0,0,0,.45);
-}
-#omnibox-dropdown::-webkit-scrollbar-thumb:active {
-  background-color: rgba(0,0,0,.55);
-}
-
-/* When the input group is focused, turn both caps' borders to primary */
-.omnibox-group:focus-within .omnibox-label,
-.omnibox-group:focus-within .omnibox-clear-wrap,
-.omnibox-group:focus-within .omnibox-input {
-  border-color: var(--bs-primary) !important;
-}
-
-/* Keep the soft focus halo you already have */
-.omnibox-group:focus-within {
-  box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
-}
+#omnibox-dropdown::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,.45); }
+#omnibox-dropdown::-webkit-scrollbar-thumb:active { background-color: rgba(0,0,0,.55); }
