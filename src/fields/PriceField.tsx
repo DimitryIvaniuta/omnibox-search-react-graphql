@@ -67,6 +67,12 @@ function logicalToCaret(display: string, logical: number, shownDec: string) {
     }
     return display.length;
 }
+/** count significant chars (digits + decimal) in a VISIBLE string */
+function sigCount(display: string, shownDec: string) {
+    let n = 0;
+    for (const ch of display) if (DIGIT.test(ch) || ch === shownDec) n++;
+    return n;
+}
 
 /* ── component ──────────────────────────────────────────────────────── */
 export default function PriceField({
@@ -140,7 +146,11 @@ export default function PriceField({
                 const [i, f = ""] = curEditable.split(".");
                 const caret = el.selectionStart ?? el.value.length;
                 const logical = caretToLogical(formatForDisplay(curEditable, groupSep, shownDec), caret, shownDec);
-                const dotLogical = caretToLogical(formatForDisplay(i + "." /* temp dot for calc */, groupSep, shownDec), Infinity, shownDec);
+                const dotLogical = caretToLogical(
+                    formatForDisplay(i + "." /* temp dot for calc */, groupSep, shownDec),
+                    Infinity,
+                    shownDec
+                );
                 const caretInFrac = logical > dotLogical;
                 if (caretInFrac && f.length >= 2) { e.preventDefault(); return; }
             }
@@ -153,6 +163,7 @@ export default function PriceField({
     /* ---------- main onChange: compute next editable/display and preserve caret ---------- */
     const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
         const el = e.currentTarget;
+
         const prevDisplay = display;
         const prevCaret = el.selectionStart ?? prevDisplay.length;
         const prevLogical = caretToLogical(prevDisplay, prevCaret, shownDec);
@@ -164,11 +175,15 @@ export default function PriceField({
             setEditable(nextEditable);
             setDisplay(nextDisplay);
 
+            // Adjust target logical pos by the change in significant chars (digits/decimal)
+            const deltaSig = sigCount(nextDisplay, shownDec) - sigCount(prevDisplay, shownDec);
+            const targetLogical = Math.max(0, prevLogical + deltaSig);
+
             // restore caret on the next frame
             requestAnimationFrame(() => {
                 const node = inputRef.current;
                 if (!node) return;
-                const nextCaret = logicalToCaret(nextDisplay, prevLogical, shownDec);
+                const nextCaret = logicalToCaret(nextDisplay, targetLogical, shownDec);
                 node.setSelectionRange(nextCaret, nextCaret);
             });
         }

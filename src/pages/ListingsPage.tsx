@@ -11,6 +11,7 @@ import {
     useDeleteListingsMutation,
     ListingsQuery,
 } from "@/generated/write-oltp/graphql";
+import { formatMoney } from "@/utils/money";
 
 type Row = NonNullable<ListingsQuery["listings"]>[number];
 
@@ -62,7 +63,7 @@ export default function ListingsPage() {
                 key: "price",
                 header: "Price",
                 className: "text-end",
-                cell: (r) => (r.price ? `${r.price.amount} ${r.price.currency}` : "—"),
+                cell: (r) => formatMoney(r.price, { style: "currency" }),
                 minWidth: 180,
             },
         ],
