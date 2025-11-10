@@ -1,22 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import type Decimal from "decimal.js";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useController, useFormContext, useWatch } from "react-hook-form";
 
-/** GraphQL payload shape */
 export type MoneyInput = { amount: string; currency: string };
 
-type Props<FormShape extends object> = {
-    /** Parent form object (from useState in the editor) */
-    form: FormShape;
-    /** Parent form setter: setForm(prev => ({ ...prev, price: … })) */
-    setForm: (updater: (prev: FormShape) => FormShape) => void;
-
-    /** Field name in the form to write to (default: 'price') */
-    name?: keyof FormShape;
-
-    /** Existing server value (Decimal|string OK) – used to prefill the input */
-    value?: { amount: Decimal | string; currency: string } | null;
-
-    /** UI bits */
+type Props = {
+    name: string;               // e.g. "price"
     label?: string;
     required?: boolean;
     defaultCurrency?: string;
@@ -24,123 +12,191 @@ type Props<FormShape extends object> = {
     className?: string;
 };
 
-/* ── helpers (no Decimal.js at runtime) ─────────────────────────────── */
+const DIGIT = /\d/;
 
-const DECIMAL_RE = /^(\d+)([.,]\d{0,2})?$/; // allow 0..2 fraction digits
-const DIGITS = "0123456789";
-
-function normalizeMoneyText(t: string): string | null {
-    const raw = t.trim().replace(/\s+/g, "");
-    if (!raw) return null;
-    const withDot = raw.replace(",", ".");
-    const m = DECIMAL_RE.exec(withDot);
-    if (!m) return null;
-    const [, i, frac] = m;
-    return frac ? `${i}${frac.replace(",", ".")}` : i;
+/* ── locale helpers ─────────────────────────────────────────────────── */
+function detectGroupSep() {
+    const s = Intl.NumberFormat().format(11111);
+    return s.replace(/1/g, "") || " ";
+}
+function shownDecimalFromGroup(groupSep: string) {
+    return groupSep === "," ? "." : ",";
 }
 
-function isNavKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    const k = e.key;
-    return (
-        k === "Backspace" ||
-        k === "Delete" ||
-        k === "ArrowLeft" ||
-        k === "ArrowRight" ||
-        k === "Home" ||
-        k === "End" ||
-        k === "Tab" ||
-        e.ctrlKey ||
-        e.metaKey
-    );
+/* ── text helpers ────────────────────────────────────────────────────── */
+/** visible → canonical editable: "1234" | "1234.5" | "1234.56" */
+function cleanToEditable(visible: string, shownDec: string): string {
+    if (!visible) return "";
+    const t = visible.replace(/[\s\u00A0]/g, "").replace(new RegExp(`\\${shownDec}`, "g"), ".");
+    let out = "", hasDot = false;
+    for (const ch of t) {
+        if (DIGIT.test(ch)) out += ch;
+        else if (ch === "." && !hasDot) { out += "."; hasDot = true; }
+    }
+    if (hasDot) {
+        const [i, f = ""] = out.split(".");
+        out = `${i}.${f.slice(0, 2)}`;
+    }
+    return out;
+}
+/** editable → visible, group integers; show decimal only if present */
+function formatForDisplay(editable: string, groupSep: string, shownDec: string) {
+    if (!editable) return "";
+    const [i, f = ""] = editable.split(".");
+    const grp = i.replace(/\B(?=(\d{3})+(?!\d))/g, groupSep);
+    return editable.includes(".") ? `${grp}${shownDec}${f}` : grp;
+}
+/** map caret to “logical” index (digits + visible decimal) */
+function caretToLogical(display: string, caret: number, shownDec: string) {
+    let n = 0;
+    for (let i = 0; i < Math.min(caret, display.length); i++) {
+        const ch = display[i];
+        if (DIGIT.test(ch) || ch === shownDec) n++;
+    }
+    return n;
+}
+/** map logical index back to caret in a given display string */
+function logicalToCaret(display: string, logical: number, shownDec: string) {
+    let n = 0;
+    for (let i = 0; i < display.length; i++) {
+        const ch = display[i];
+        if (DIGIT.test(ch) || ch === shownDec) {
+            n++;
+            if (n === logical) return i + 1;
+        }
+    }
+    return display.length;
 }
 
-export default function PriceField<FormShape extends Record<string, any>>(
-    {
-        form,
-        setForm,
-        name,
-        value = null,
-        label = "Price",
-        required,
-        defaultCurrency = "USD",
-        disabled,
-        className,
-    }: Props<FormShape>) {
-    const fieldName = (name ?? ("price" as keyof FormShape)) as string;
+/* ── component ──────────────────────────────────────────────────────── */
+export default function PriceField({
+                                       name,
+                                       label = "Price",
+                                       required,
+                                       defaultCurrency = "USD",
+                                       disabled,
+                                       className,
+                                   }: Props) {
+    const { control } = useFormContext();
+    const { field, fieldState } = useController<{ [k: string]: MoneyInput | null }>({ name, control });
 
-    // Local UI state (text + currency); parent does NOT track price at all
-    const [text, setText] = useState<string>("");
+    // Watch external value so reset()/prefill can update us.
+    const external = useWatch({ control, name }) as MoneyInput | null | undefined;
+
+    const groupSep = useMemo(() => detectGroupSep(), []);
+    const shownDec = useMemo(() => shownDecimalFromGroup(groupSep), [groupSep]);
+
+    // Local state: canonical editable, display, currency.
+    const [editable, setEditable] = useState<string>("");
+    const [display, setDisplay] = useState<string>("");
     const [currency, setCurrency] = useState<string>(defaultCurrency);
 
-    // Prefill from server/parent value (Decimal or string amount)
+    const inputRef = useRef<HTMLInputElement>(null);
+    const lastPushed = useRef<string>("");   // JSON snapshot of last value we sent to RHF
+
+    /* ---------- one-way sync FROM RHF (only if external change differs from our last push) ---------- */
     useEffect(() => {
-        if (!value) {
-            setText("");
-            setCurrency(defaultCurrency);
-            // also clear parent form's price
-            setForm((prev) => ({ ...prev, [fieldName]: null }) as FormShape);
-            return;
+        const extJSON = JSON.stringify(
+            external ? { amount: String((external as any).amount), currency: external.currency } : null
+        );
+        if (extJSON === lastPushed.current) return; // ignore our own last write
+
+        const amt = external?.amount ? String((external as any).amount) : "";
+        const cur = external?.currency ?? defaultCurrency;
+
+        const e = cleanToEditable(amt, shownDec);
+        const d = formatForDisplay(e, groupSep, shownDec);
+
+        setEditable(e);
+        setDisplay(d);
+        setCurrency(cur);
+    }, [external, defaultCurrency, groupSep, shownDec]);
+
+    /* ---------- push TO RHF whenever editable/currency become a valid value ---------- */
+    useEffect(() => {
+        const next = editable ? ({ amount: editable, currency } as MoneyInput) : (required ? null : null);
+        const snap = JSON.stringify(next);
+        if (snap !== lastPushed.current) {
+            lastPushed.current = snap;
+            field.onChange(next);
         }
-        const amt = typeof value.amount === "string" ? value.amount : value.amount.toString();
-        setText(amt ?? "");
-        setCurrency(value.currency ?? defaultCurrency);
-        // write normalized value (if valid) into form immediately
-        const norm = amt ? normalizeMoneyText(amt) : null;
-        setForm((prev) => ({ ...prev, [fieldName]: norm ? { amount: norm, currency: value.currency ?? defaultCurrency } : null }) as FormShape);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value, defaultCurrency]);
+    }, [editable, currency, required]);
 
-    // Derived validity + normalized string
-    const normalized = useMemo(() => (text ? normalizeMoneyText(text) : ""), [text]);
-    const valid = useMemo(() => (text.trim() ? normalizeMoneyText(text) !== null : !required), [text, required]);
-
-    // Push updates into parent form whenever user edits (only when valid or empty)
-    useEffect(() => {
-        const next =
-            normalized && valid
-                ? ({ amount: normalized, currency } as MoneyInput)
-                : text.trim()
-                    ? null // invalid – store null
-                    : null; // empty – store null
-
-        setForm((prev) => ({ ...prev, [fieldName]: next }) as FormShape);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [normalized, currency, valid]);
-
-    // Prevent non-numeric typing
+    /* ---------- typing guards ---------- */
     const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
         if (disabled) return;
-        if (isNavKey(e)) return;
-        if (DIGITS.includes(e.key)) return;
-        if ((e.key === "." || e.key === ",") && !/[.,]/.test(e.currentTarget.value || "")) return;
+        const k = e.key;
+        if (
+            k === "Backspace" || k === "Delete" || k === "ArrowLeft" || k === "ArrowRight" ||
+            k === "Home" || k === "End" || k === "Tab" || e.ctrlKey || e.metaKey
+        ) return;
+
+        if (DIGIT.test(k)) {
+            // enforce max 2 decimals only when caret is after decimal
+            const el = e.currentTarget;
+            const curEditable = cleanToEditable(el.value, shownDec);
+            if (curEditable.includes(".")) {
+                const [i, f = ""] = curEditable.split(".");
+                const caret = el.selectionStart ?? el.value.length;
+                const logical = caretToLogical(formatForDisplay(curEditable, groupSep, shownDec), caret, shownDec);
+                const dotLogical = caretToLogical(formatForDisplay(i + "." /* temp dot for calc */, groupSep, shownDec), Infinity, shownDec);
+                const caretInFrac = logical > dotLogical;
+                if (caretInFrac && f.length >= 2) { e.preventDefault(); return; }
+            }
+            return;
+        }
+        if ((k === "," || k === ".") && !cleanToEditable(e.currentTarget.value, shownDec).includes(".")) return;
         e.preventDefault();
     };
 
-    // Sanitize paste
-    const onPaste: React.ClipboardEventHandler<HTMLInputElement> = (e) => {
-        if (disabled) return;
-        const paste = (e.clipboardData.getData("text") || "").trim();
-        if (!paste) return;
-        let out = "",
-            sep = false;
-        for (const ch of paste) {
-            if (DIGITS.includes(ch)) out += ch;
-            else if ((ch === "." || ch === ",") && !sep) {
-                out += ".";
-                sep = true;
-            }
-        }
-        const norm = normalizeMoneyText(out);
-        if (norm) {
-            e.preventDefault();
-            setText(norm);
+    /* ---------- main onChange: compute next editable/display and preserve caret ---------- */
+    const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const el = e.currentTarget;
+        const prevDisplay = display;
+        const prevCaret = el.selectionStart ?? prevDisplay.length;
+        const prevLogical = caretToLogical(prevDisplay, prevCaret, shownDec);
+
+        const nextEditable = cleanToEditable(el.value, shownDec);
+        const nextDisplay = formatForDisplay(nextEditable, groupSep, shownDec);
+
+        if (nextEditable !== editable || nextDisplay !== display) {
+            setEditable(nextEditable);
+            setDisplay(nextDisplay);
+
+            // restore caret on the next frame
+            requestAnimationFrame(() => {
+                const node = inputRef.current;
+                if (!node) return;
+                const nextCaret = logicalToCaret(nextDisplay, prevLogical, shownDec);
+                node.setSelectionRange(nextCaret, nextCaret);
+            });
         }
     };
 
-    // Gentle normalize on blur
+    const onPaste: React.ClipboardEventHandler<HTMLInputElement> = (e) => {
+        if (disabled) return;
+        const pasted = (e.clipboardData.getData("text") || "").trim();
+        const nextEditable = cleanToEditable(pasted, shownDec);
+        if (nextEditable || pasted === "") {
+            e.preventDefault();
+            const nextDisplay = formatForDisplay(nextEditable, groupSep, shownDec);
+            setEditable(nextEditable);
+            setDisplay(nextDisplay);
+            requestAnimationFrame(() => {
+                const node = inputRef.current;
+                if (!node) return;
+                const c = nextDisplay.length;
+                node.setSelectionRange(c, c);
+            });
+        }
+    };
+
     const onBlur: React.FocusEventHandler<HTMLInputElement> = (e) => {
-        const n = normalizeMoneyText(e.currentTarget.value);
-        if (n !== null) setText(n);
+        const ebl = cleanToEditable(e.currentTarget.value, shownDec);
+        const disp = formatForDisplay(ebl, groupSep, shownDec);
+        if (ebl !== editable) setEditable(ebl);
+        if (disp !== display) setDisplay(disp);
     };
 
     return (
@@ -151,19 +207,19 @@ export default function PriceField<FormShape extends Record<string, any>>(
 
             <div className="input-group">
                 <input
-                    className={`form-control${!valid ? " is-invalid" : ""}`}
+                    ref={inputRef}
+                    className={`form-control${fieldState.invalid ? " is-invalid" : ""}`}
                     type="text"
                     inputMode="decimal"
                     autoComplete="off"
-                    placeholder="1234.56"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    placeholder={`123${shownDec}45`}
+                    value={display}
+                    onChange={onChange}
                     onKeyDown={onKeyDown}
                     onPaste={onPaste}
                     onBlur={onBlur}
                     disabled={disabled}
-                    aria-invalid={!valid}
-                    aria-describedby="price-help"
+                    aria-invalid={fieldState.invalid}
                 />
                 <select
                     className="form-select"
@@ -178,13 +234,9 @@ export default function PriceField<FormShape extends Record<string, any>>(
                 </select>
             </div>
 
-            {!valid ? (
-                <div className="invalid-feedback d-block">Enter a valid amount (e.g. 1234.56)</div>
-            ) : text ? (
-                <div id="price-help" className="form-text">
-                    Normalized: {normalized} {currency}
-                </div>
-            ) : null}
+            {fieldState.error && (
+                <div className="invalid-feedback d-block">{fieldState.error.message}</div>
+            )}
         </div>
     );
 }
