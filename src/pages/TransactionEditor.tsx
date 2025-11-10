@@ -1,12 +1,9 @@
-// TransactionEditor.tsx
-// Full-screen editor. Requires Title + Contact + Listing. Uses ContactPicker & ListingPicker.
-// After save, navigates to /transactions and highlights the row.
-
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FormProvider, useForm, Controller } from "react-hook-form";
 import Decimal from "decimal.js";
-import ContactPicker from "@/components/pickers/ContactPicker";
-import ListingPicker from "@/components/pickers/ListingPicker";
+
+// generated GraphQL hooks (names follow your existing pattern)
 import {
     useTransactionByIdQuery,
     useTransactionCreateMutation,
@@ -14,116 +11,128 @@ import {
     TransactionsDocument,
 } from "@/generated/write-oltp/graphql";
 
-type FormState = {
+import ContactPicker from "@/components/pickers/ContactPicker";
+import ListingPicker from "@/components/pickers/ListingPicker";
+import {MoneyInput} from "@/fields";
+import PriceField from "@/fields/PriceField";
+
+type FormValues = {
     title: string;
-    subtitle: string;
-    contactId: string;    // required
-    listingId: string;    // required
-    totalAmount: string;
-    totalCurrency: string;
-    version: number;
+    status?: string | null;
+    contactId: string;
+    listingId: string;
+    total: MoneyInput | null;          // handled by PriceField; amount as normalized string
+    version: number | null;
 };
 
-const TransactionEditor = ()=> {
+export default function TransactionEditor() {
     const nav = useNavigate();
     const { id } = useParams<{ id: string }>();
     const isNew = !id || id === "new";
 
+    // Query only when editing
     const { data } = useTransactionByIdQuery({
         skip: isNew,
         variables: { id: id as string },
         fetchPolicy: "cache-and-network",
     });
 
-    const [form, setForm] = useState<FormState>({
-        title: "",
-        subtitle: "",
-        contactId: "",
-        listingId: "",
-        totalAmount: "0.00",
-        totalCurrency: "USD",
-        version: 0,
+    const methods = useForm<FormValues>({
+        mode: "onChange",
+        defaultValues: {
+            title: "",
+            status: "OPEN",
+            contactId: "",
+            listingId: "",
+            total: null,
+            version: null,
+        },
     });
 
+    const { handleSubmit, reset, watch, formState, control } = methods;
+    const busy = formState.isSubmitting;
+
+    // Prefill when editing
     useEffect(() => {
         if (!isNew && data?.transaction) {
             const t = data.transaction;
-            setForm({
+            reset({
                 title: t.title ?? "",
-                subtitle: t.subtitle ?? "",
+                status: t.status ?? "OPEN",
                 contactId: t.contactId ?? "",
                 listingId: t.listingId ?? "",
-                totalAmount: t.total ? new Decimal(t.total.amount).toFixed(2) : "0.00",
-                totalCurrency: t.total?.currency ?? "USD",
-                version: t.version,
+                version: t.version ?? null,
+                // allow Decimal|string; PriceField will normalize on first render
+                total: t.total
+                    ? { amount: String((t.total.amount as any)), currency: t.total.currency }
+                    : null,
             });
         }
-    }, [isNew, data]);
+    }, [isNew, data, reset]);
 
-    const [createTx, { loading: creating }] = useTransactionCreateMutation({
+    const [createTx] = useTransactionCreateMutation({
         refetchQueries: [{ query: TransactionsDocument, variables: { offset: 0, limit: 50 } }],
         awaitRefetchQueries: true,
-        onCompleted: (res) => {
-            const created = res.createTransaction;
-            nav("/transactions", { state: { highlightId: created.id } });
-        },
-    });
-    const [updateTx, { loading: updating }] = useTransactionUpdateMutation({
-        onCompleted: (res) => {
-            const updated = res.updateTransaction;
-            nav("/transactions", { state: { highlightId: updated.id } });
-        },
+        onCompleted: (res) =>
+            nav("/transactions", { state: { highlightId: res.createTransaction.id } }),
     });
 
-    const totalInput = useMemo(
-        () => ({
-            amount: new Decimal(form.totalAmount || "0"),
-            currency: (form.totalCurrency || "USD").toUpperCase(),
-        }),
-        [form.totalAmount, form.totalCurrency]
-    );
+    const [updateTx] = useTransactionUpdateMutation({
+        refetchQueries: [{ query: TransactionsDocument, variables: { offset: 0, limit: 50 } }],
+        awaitRefetchQueries: true,
+        onCompleted: (res) =>
+            nav("/transactions", { state: { highlightId: res.updateTransaction.id } }),
+    });
 
-    const isSaving = creating || updating;
-    const isValid = form.title.trim().length > 0 && !!form.contactId && !!form.listingId;
+    const onSubmit = handleSubmit(async (vals) => {
+        // Guard required fields
+        if (!vals.title.trim() || !vals.contactId || !vals.listingId || !vals.total) return;
 
-    const formRef = useRef<HTMLFormElement>(null);
-
-    const onSubmit: React.FormEventHandler = (e) => {
-        e.preventDefault();
-        if (!isValid) return;
+        const totalForMutation = {
+            amount: new Decimal(vals.total.amount), // GraphQL Money(BigDecimal)
+            currency: vals.total.currency,
+        };
 
         if (isNew) {
-            void createTx({
+            await createTx({
                 variables: {
                     input: {
-                        title: form.title,
-                        subtitle: form.subtitle || null,
-                        contactId: form.contactId,
-                        listingId: form.listingId,
-                        total: totalInput,
+                        title: vals.title,
+                        status: vals.status,
+                        contactId: vals.contactId,
+                        listingId: vals.listingId,
+                        total: totalForMutation,
                     },
                 },
             });
         } else {
-            void updateTx({
+            await updateTx({
                 variables: {
                     id: id as string,
                     input: {
-                        title: form.title,
-                        subtitle: form.subtitle || null,
-                        contactId: form.contactId,
-                        listingId: form.listingId,
-                        version: form.version,
-                        total: totalInput,
+                        title: vals.title,
+                        status: vals.status,
+                        contactId: vals.contactId,
+                        listingId: vals.listingId,
+                        version: vals.version ?? 0,
+                        total: totalForMutation,
                     },
                 },
             });
         }
-    };
+    });
+
+    const v = watch();
+    const canSave =
+        !busy &&
+        v.title.trim().length > 0 &&
+        !!v.contactId &&
+        !!v.listingId &&
+        !!v.total;
 
     return (
         <div className="container-fluid p-0 d-flex flex-column h-100">
-            {/* top bar */}
+            {/* Pinned header */}
             <div className="bg-white border-bottom px-3 py-2 d-flex align-items-center gap-2">
                 <button className="btn btn-link text-decoration-none" onClick={() => nav("/transactions")}>
                     <i className="bi bi-arrow-left" /> Back
@@ -131,84 +140,66 @@ const TransactionEditor = ()=> {
                 <h5 className="mb-0 fw-semibold">{isNew ? "Create Transaction" : "Edit Transaction"}</h5>
             </div>
 
-            {/* body */}
-            <form ref={formRef} className="flex-grow-1 min-h-0 overflow-auto px-3 py-3" onSubmit={onSubmit}>
-                <div className="row g-3">
-                    <div className="col-md-6">
-                        <label className="form-label">Title</label>
-                        <input
-                            className="form-control"
-                            value={form.title}
-                            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                            required
-                        />
-                    </div>
-
-                    <div className="col-md-6">
-                        <label className="form-label">Subtitle</label>
-                        <input
-                            className="form-control"
-                            value={form.subtitle}
-                            onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
-                        />
-                    </div>
-
-                    <div className="col-md-6">
-                        <label className="form-label">Contact <span className="text-danger">*</span></label>
-                        <ContactPicker
-                            value={form.contactId || null}
-                            onChange={(id) => setForm((f) => ({ ...f, contactId: id ?? "" }))}
-                        />
-                        {!form.contactId && <small className="text-danger">Contact is required</small>}
-                    </div>
-
-                    <div className="col-md-6">
-                        <label className="form-label">Listing <span className="text-danger">*</span></label>
-                        <ListingPicker
-                            value={form.listingId || null}
-                            onChange={(id) => setForm((f) => ({ ...f, listingId: id ?? "" }))}
-                        />
-                        {!form.listingId && <small className="text-danger">Listing is required</small>}
-                    </div>
-
-                    <div className="col-md-3">
-                        <label className="form-label">Total</label>
-                        <input
-                            className="form-control"
-                            inputMode="decimal"
-                            value={form.totalAmount}
-                            onChange={(e) => setForm((f) => ({ ...f, totalAmount: e.target.value }))}
-                        />
-                    </div>
-                    <div className="col-md-2">
-                        <label className="form-label">Currency</label>
-                        <input
-                            className="form-control"
-                            value={form.totalCurrency}
-                            onChange={(e) => setForm((f) => ({ ...f, totalCurrency: e.target.value.toUpperCase() }))}
-                        />
-                    </div>
-
-                    {!isNew && (
-                        <div className="col-md-3">
-                            <label className="form-label">Version</label>
-                            <input className="form-control" value={form.version} readOnly />
+            <FormProvider {...methods}>
+                <form className="flex-grow-1 min-h-0 overflow-auto px-3 py-3" onSubmit={onSubmit}>
+                    <div className="row g-3">
+                        <div className="col-md-6">
+                            <label className="form-label">Title</label>
+                            <input className="form-control" {...methods.register("title", { required: true })} />
                         </div>
-                    )}
-                    <div className="ms-auto d-flex gap-2">
-                        <button
-                            className="btn btn-primary"
-                            type="button"
-                            disabled={isSaving || !isValid}
-                            onClick={() => formRef.current?.requestSubmit()}
-                        >
-                            {isSaving ? "Saving…" : "Save"}
-                        </button>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Status</label>
+                            <select className="form-select" {...methods.register("status", { required: true })}>
+                                <option value="OPEN">OPEN</option>
+                                <option value="CLOSED">CLOSED</option>
+                                {/* add more if your schema contains them */}
+                            </select>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Contact</label>
+                            <Controller
+                                name="contactId"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <ContactPicker value={field.value} onChange={(id) => field.onChange(id ?? "")} />
+                                )}
+                            />
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Listing</label>
+                            <Controller
+                                name="listingId"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <ListingPicker value={field.value} onChange={(id) => field.onChange(id ?? "")} />
+                                )}
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            {/* Money input with live formatting; writes {amount:string,currency} to RHF */}
+                            <PriceField name="total" required label="Total amount" />
+                        </div>
+                        <div className="col-12">
+                            <button className="btn btn-primary" type="submit" disabled={!canSave}>
+                                {busy ? "Saving…" : "Save"}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary ms-2"
+                                onClick={() => nav("/transactions")}
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </FormProvider>
         </div>
     );
 }
-
-export default TransactionEditor;

@@ -96,6 +96,12 @@ export function parseDecimal(text: string): Decimal | null {
     }
 }
 
+export const formatMoneyAmount = (
+    amount: unknown,
+    currency: string,
+    opts?: Parameters<typeof formatMoney>[1]
+) => formatMoney({ amount, currency }, opts);
+
 /** Build MoneyInput payload for GraphQL (string amount), or null if invalid/empty */
 export function toMoneyInput(text: string, currency: string) {
     const d = parseDecimal(text);

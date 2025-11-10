@@ -9,6 +9,7 @@ import {
     useDeleteTransactionsMutation,
     type TransactionsQuery,
 } from "@/generated/write-oltp/graphql";
+import {formatMoney} from "@/utils/money";
 
 type Row = NonNullable<TransactionsQuery["transactions"]>[number];
 const SELECTION_KEY = "transactions:selectedIds";
@@ -59,7 +60,7 @@ const TransactionsPage = () => {
             header: "Total",
             width: 160,
             className: "text-end",
-            cell: (r) => (r.total ? `${r.total.amount} ${r.total.currency}` : "—"),
+            cell: (r) => formatMoney(r.total, { style: "currency" }),
         },
     ], [openEditor]);
 
