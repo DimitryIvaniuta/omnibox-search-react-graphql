@@ -1,66 +1,56 @@
-import {
-    ApolloClient,
-    InMemoryCache,
-    createHttpLink,
-    from,
-} from "@apollo/client";
-import { setContext } from "@apollo/client/link/context";
-import { onError } from "@apollo/client/link/error";
-import { RetryLink } from "@apollo/client/link/retry";
-import omniboxIntrospection from "@/generated/omnibox/possibleTypes.json";
+import { ApolloClient, InMemoryCache, HttpLink, DefaultOptions } from "@apollo/client";
 
-// --- ENV (Vite) ---
-const OMNIBOX_URL = import.meta.env.VITE_OMNIBOX_URL as string;
-const TENANT = (import.meta.env.VITE_TENANT as string) || "demo-tenant";
+/**
+ * Apollo client for the Omnibox GraphQL endpoint.
+ * - Disables array merging for Query.omnibox (each (q,limitPerGroup) is unique)
+ * - Uses no-cache by default to avoid stale omnibox results between keystrokes
+ */
+const VITE_OMNIBOX_URL = import.meta.env.VITE_OMNIBOX_URL || "http://localhost:8080/graphql";
+const VITE_TENANT = import.meta.env.VITE_TENANT || "demo-tenant";
 
-// ---- Links ----
-
-// Add X-Tenant per request (keeps future room for dynamic headers)
-const tenantLink = setContext((_req, prev) => ({
+const httpLink = new HttpLink({
+    uri: VITE_OMNIBOX_URL,
     headers: {
-        ...(prev.headers ?? {}),
-        "X-Tenant": TENANT,
+        "X-Tenant": VITE_TENANT,
     },
-}));
-
-// HTTP link (AbortController respected via context.fetchOptions.signal)
-const httpLink = createHttpLink({
-    uri: OMNIBOX_URL,
-    fetchOptions: { method: "POST" },
+    // Make sure the browser/network layer doesn't cache responses either
+    fetchOptions: { cache: "no-store" as RequestCache },
 });
 
-// Retry transient issues
-const retryLink = new RetryLink({
-    attempts: (_count, _op, error) => {
-        // For v3 we don’t rely on deprecated networkError; retry a couple times on any link error
-        return !!error && _count <= 2;
-    },
-    delay: (count) => Math.min(250 * count, 1000),
-});
-
-// Modern error logging (no deprecated graphQLErrors/networkError)
-const errorLink = onError(({ response, operation }) => {
-    const errs = response?.errors ?? [];
-    if (errs.length > 0) {
-        // eslint-disable-next-line no-console
-        console.warn(
-            `[GQL:${operation.operationName}]`,
-            errs.map((e) => e.message).join(" | ")
-        );
-    }
-});
-
-// ---- Cache ----
-// Your generated JSON has shape: { possibleTypes: { Interface: ["Impl1","Impl2"] } }
 const cache = new InMemoryCache({
-    possibleTypes:
-    (omniboxIntrospection as unknown as { possibleTypes: Record<string, string[]> })
-        .possibleTypes,
+    typePolicies: {
+        Query: {
+            fields: {
+                /**
+                 * Treat each combination of (q, limitPerGroup) as a distinct cache entry
+                 * and DO NOT merge arrays from previous responses.
+                 */
+                omnibox: {
+                    keyArgs: ["q", "limitPerGroup"],
+                    merge: false,
+                },
+            },
+        },
+    },
 });
 
-// ---- Client ----
+// For debounced keystroke searches we do not want Apollo cache interference.
+const defaultOptions: DefaultOptions = {
+    query: {
+        fetchPolicy: "no-cache",
+        errorPolicy: "all",
+    },
+    watchQuery: {
+        fetchPolicy: "no-cache",
+        errorPolicy: "all",
+    },
+    mutate: {
+        errorPolicy: "all",
+    },
+};
+
 export const omniboxClient = new ApolloClient({
-    link: from([errorLink, retryLink, tenantLink, httpLink]),
+    link: httpLink,
     cache,
-    ssrMode: false,
+    defaultOptions,
 });

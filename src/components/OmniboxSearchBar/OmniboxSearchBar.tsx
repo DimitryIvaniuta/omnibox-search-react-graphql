@@ -57,13 +57,13 @@ export default function OmniboxSearchBar({
     }, [q]);
 
     // Omnibox query
-    const { data, loading } = useOmniboxQuery({
+    const { data, loading, refetch, networkStatus, error } = useOmniboxQuery({
         variables: { q: dq, limitPerGroup },
         skip: dq.length === 0,
         client: omniboxClient,
-        fetchPolicy: "cache-first",
+        fetchPolicy: "no-cache",
+        notifyOnNetworkStatusChange: true,
     });
-
     // Flatten + group
     const { flat, grouped } = useMemo(() => {
         const hits: OmniboxHit[] = [];
@@ -262,7 +262,7 @@ export default function OmniboxSearchBar({
                         position: "absolute",
                         left: dropDims.left,
                         width: dropDims.width,
-                        maxHeight: 360,
+                        maxHeight: 260,
                         overflow: "auto",
                     }}
                     role="listbox"

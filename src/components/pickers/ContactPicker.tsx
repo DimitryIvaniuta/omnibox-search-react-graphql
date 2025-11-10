@@ -38,7 +38,8 @@ export default function ContactPicker({
         variables: { q: debounced, limitPerGroup },
         skip: debounced.length === 0,
         client: omniboxClient,
-        fetchPolicy: "cache-first",
+        fetchPolicy: "no-cache",
+        notifyOnNetworkStatusChange: true,
     });
 
     // Contacts hits from omnibox

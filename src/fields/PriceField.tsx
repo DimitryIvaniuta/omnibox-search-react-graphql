@@ -227,7 +227,7 @@ export default function PriceField({
                     type="text"
                     inputMode="decimal"
                     autoComplete="off"
-                    placeholder={`123${shownDec}45`}
+                    placeholder={``}
                     value={display}
                     onChange={onChange}
                     onKeyDown={onKeyDown}

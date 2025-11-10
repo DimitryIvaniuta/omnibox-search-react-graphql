@@ -36,7 +36,8 @@ const ListingPicker = ({
         variables: { q: debounced, limitPerGroup },
         skip: debounced.length === 0,
         client: omniboxClient,
-        fetchPolicy: "cache-first",
+        fetchPolicy: "no-cache",
+        notifyOnNetworkStatusChange: true,
     });
     const options = useMemo(() => omni?.omnibox?.listings ?? [], [omni]);
 
