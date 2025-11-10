@@ -9,8 +9,8 @@ const Sidebar = ()=> {
         "list-group-item list-group-item-action border-0 rounded-0" + (isActive ? " active" : "");
 
     return (
-        <aside className="border-end bg-body" style={{width: 240}}>
-            <nav aria-label="Section">
+        <aside className="border-end bg-body">
+            <nav aria-label="Section"  style={{width: 160}}>
                 <div className="list-group list-group-flush">
                     <NavLink to="/contacts" className={link} end>Contacts</NavLink>
                     <NavLink to="/listings" className={link} end>Listings</NavLink>

@@ -8,8 +8,8 @@
 .omnibox-group::after {
   content: "";
   position: absolute;
-  inset: -2px;                     /* extend by border width */
-  border: 2px solid var(--bs-primary);
+  inset: -1px;                     /* extend by border width */
+  border: 1px solid var(--bs-primary);
   border-radius: 50rem;
   pointer-events: none;            /* never blocks clicks */
   transform: scaleX(0);            /* hidden initially */
@@ -22,6 +22,14 @@
   transform: scaleX(1);
 }
 
+/* Prevent input from causing layout shift */
+.omnibox-input { flex: 1 1 auto; min-width: 0; height: 45px; }
+.omnibox-input:focus { outline: 0; box-shadow: none; }
+
+/* Clear button fades without affecting layout */
+.omnibox-clear-btn { opacity: 0; pointer-events: none; transition: opacity .15s ease; }
+.omnibox-clear-btn.is-visible { opacity: 1; pointer-events: auto; }
+
 /* Hide the original per-segment borders so the rail looks continuous */
 .omnibox-group:focus-within .omnibox-label,
 .omnibox-group:focus-within .omnibox-input,
@@ -31,20 +39,21 @@
 
 /* Optional: subtle glow while focused (keep if you like) */
 .omnibox-group:focus-within {
-  //box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .15);
+  box-shadow: 0 0 0 .1rem rgba(13, 110, 253, .15);
 }
 
 /* Keep your existing styling for slim dropdown scrollbar, etc. */
 #omnibox-dropdown {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,.35) transparent;
+  scrollbar-color: rgba(13, 110, 253, .15) transparent;
+  border-color: rgba(13, 110, 253, .15);
 }
 #omnibox-dropdown::-webkit-scrollbar { width: 6px; }
 #omnibox-dropdown::-webkit-scrollbar-track { background: transparent; }
 #omnibox-dropdown::-webkit-scrollbar-thumb {
-  background-color: rgba(0,0,0,.35);
-  border-radius: 8px;
-  border: 2px solid transparent;
+  background-color: rgba(13, 110, 253, .15);
+  border-radius: 2px;
+  border: 1px solid transparent;
   background-clip: content-box;
 }
 #omnibox-dropdown::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,.45); }

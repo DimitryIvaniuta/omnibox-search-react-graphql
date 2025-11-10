@@ -2,24 +2,27 @@
 // - Uses ContactPicker for selecting a related Contact with debounced Omnibox search
 // - Navigates back to list and highlights the saved/created record
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Decimal from "decimal.js";
 import {
     useListingByIdQuery,
     useListingCreateMutation,
     useListingUpdateMutation,
+    ListingsDocument,
 } from "@/generated/write-oltp/graphql";
 import ContactPicker from "@/components/pickers/ContactPicker";
+import PriceField from "@/fields/PriceField";
 
-type FormState = {
+type MoneyShape = { amount: string; currency: string }; // what PriceField writes into the form
+
+type ListingForm = {
     title: string;
-    subtitle: string;
-    mlsId: string;
-    contactId: string;
-    priceAmount: string;
-    priceCurrency: string;
-    version: number;
+    subtitle: string | null;
+    mlsId: string | null;
+    contactId: string; // required by schema
+    price: MoneyShape | null; // filled by PriceField; must be non-null on create
+    version: number | null;
 };
 
 export default function ListingEditor() {
@@ -33,32 +36,34 @@ export default function ListingEditor() {
         fetchPolicy: "cache-and-network",
     });
 
-    const [form, setForm] = useState<FormState>({
+    // Single source of truth for the form; PriceField writes to `price`
+    const [form, setForm] = useState<ListingForm>({
         title: "",
-        subtitle: "",
-        mlsId: "",
+        subtitle: null,
+        mlsId: null,
         contactId: "",
-        priceAmount: "0.00",
-        priceCurrency: "USD",
-        version: 0,
+        price: null,
+        version: null,
     });
 
+    // Prefill non-price fields; price is prefilled by PriceField via its `value` prop
     useEffect(() => {
         if (!isNew && data?.listing) {
             const l = data.listing;
-            setForm({
+            setForm((prev) => ({
+                ...prev,
                 title: l.title ?? "",
-                subtitle: l.subtitle ?? "",
-                mlsId: l.mlsId ?? "",
+                subtitle: l.subtitle ?? null,
+                mlsId: l.mlsId ?? null,
                 contactId: l.contactId ?? "",
-                priceAmount: l.price ? new Decimal(l.price.amount).toFixed(2) : "0.00",
-                priceCurrency: l.price?.currency ?? "USD",
-                version: l.version,
-            });
+                version: l.version ?? null,
+            }));
         }
     }, [isNew, data]);
 
     const [createListing, { loading: creating }] = useListingCreateMutation({
+        refetchQueries: [{ query: ListingsDocument, variables: { offset: 0, limit: 50 } }],
+        awaitRefetchQueries: true,
         onCompleted: (res) => {
             const created = res.createListing;
             nav("/listings", { state: { highlightId: created.id } });
@@ -66,60 +71,71 @@ export default function ListingEditor() {
     });
 
     const [updateListing, { loading: updating }] = useListingUpdateMutation({
+        refetchQueries: [{ query: ListingsDocument, variables: { offset: 0, limit: 50 } }],
+        awaitRefetchQueries: true,
         onCompleted: (res) => {
             const updated = res.updateListing;
             nav("/listings", { state: { highlightId: updated.id } });
         },
     });
 
-    const priceInput = useMemo(
-        () => ({
-            amount: new Decimal(form.priceAmount || "0"),
-            currency: (form.priceCurrency || "USD").toUpperCase(),
-        }),
-        [form.priceAmount, form.priceCurrency]
-    );
+    const busy = creating || updating;
 
-    const isSaving = () => creating
-        || updating;
+    // Create requires: title, mlsId, contactId, price (non-null)
+    const validCommon =
+        form.title.trim().length > 0 &&
+        (form.mlsId?.trim().length ?? 0) > 0 &&
+        !!form.contactId;
 
-    const isValid = () =>
-        form.title.trim().length > 0
-        && form.mlsId.trim().length > 0
-        && form.contactId; // contact required + non-empty title
+    const validCreate = validCommon && !!form.price;
+    const validUpdate = validCommon && !!form.price && form.version != null;
 
+    const priceForMutation = () => ({
+        amount: new Decimal(form.price!.amount),   // convert string to Decimal
+        currency: form.price!.currency,
+    });
 
-    const onSubmit: React.FormEventHandler = (e) => {
+    const onSubmit: React.FormEventHandler = async (e) => {
         e.preventDefault();
-        if(!isValid()) {
-            return false;
-        }
-        // Guard minimal fields
-        if (!form.title.trim()) return;
+        if (busy) return;
 
         if (isNew) {
-            void createListing({
+            if (!validCreate) return;
+
+            // const priceForMutation = form.price as unknown as {
+            //     amount: unknown; // Decimal per codegen, but backend accepts serialized scalar
+            //     currency: string;
+            // };
+
+            await createListing({
                 variables: {
                     input: {
                         title: form.title,
-                        subtitle: form.subtitle || null,
-                        mlsId: form.mlsId || null,
-                        contactId: form.contactId, // can be null if not chosen yet
-                        price: priceInput,
+                        subtitle: form.subtitle,
+                        mlsId: form.mlsId,
+                        contactId: form.contactId,
+                        price: priceForMutation(),
                     },
                 },
             });
         } else {
-            void updateListing({
+            if (!validUpdate) return;
+
+            // const priceForMutation = form.price as unknown as {
+            //     amount: unknown;
+            //     currency: string;
+            // };
+
+            await updateListing({
                 variables: {
                     id: id as string,
                     input: {
                         title: form.title,
-                        subtitle: form.subtitle || null,
-                        mlsId: form.mlsId || null,
-                        contactId: form.contactId, // nullable on update as well
-                        version: form.version,
-                        price: priceInput,
+                        subtitle: form.subtitle,
+                        mlsId: form.mlsId,
+                        contactId: form.contactId,
+                        version: form.version as number,
+                        price: priceForMutation(),
                     },
                 },
             });
@@ -128,22 +144,20 @@ export default function ListingEditor() {
 
     return (
         <div className="container-fluid p-0 d-flex flex-column h-100">
-            {/* editor header */}
+            {/* Header */}
             <div className="bg-white border-bottom px-3 py-2 d-flex align-items-center gap-2">
                 <button className="btn btn-link text-decoration-none" onClick={() => nav("/listings")}>
                     <i className="bi bi-arrow-left" /> Back
                 </button>
-                <h5 className="mb-0 fw-semibold">
-                    {isNew ? "Create Listing" : "Edit Listing"}
-                </h5>
+                <h5 className="mb-0 fw-semibold">{isNew ? "Create Listing" : "Edit Listing"}</h5>
             </div>
 
-            {/* editor body */}
+            {/* Body */}
             <form className="flex-grow-1 min-h-0 overflow-auto px-3 py-3" onSubmit={onSubmit}>
                 <div className="row g-3">
                     <div className="col-md-6">
-                        <label className="form-label">Title
-                            {!form.title.trim() && <span className="text-danger small mt-1"> required*</span>}
+                        <label className="form-label">
+                            Title {!form.title.trim() && <span className="text-danger small">required*</span>}
                         </label>
                         <input
                             className="form-control"
@@ -157,62 +171,52 @@ export default function ListingEditor() {
                         <label className="form-label">Subtitle</label>
                         <input
                             className="form-control"
-                            value={form.subtitle}
-                            onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
+                            value={form.subtitle ?? ""}
+                            onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value || null }))}
                         />
                     </div>
 
                     <div className="col-md-4">
-                        <label className="form-label">MLS ID
-                            {!form.mlsId.trim() && <span className="text-danger small mt-1"> required*</span>}
+                        <label className="form-label">
+                            MLS ID {!form.mlsId?.trim() && <span className="text-danger small">required*</span>}
                         </label>
                         <input
                             className="form-control"
-                            value={form.mlsId}
-                            onChange={(e) => setForm((f) => ({ ...f, mlsId: e.target.value }))}
+                            value={form.mlsId ?? ""}
+                            onChange={(e) => setForm((f) => ({ ...f, mlsId: e.target.value || null }))}
+                            required
                         />
                     </div>
 
                     <div className="col-md-8">
-                        <label className="form-label">Contact
-                            {!form.contactId && <span className="text-danger small mt-1"> required*</span>}
+                        <label className="form-label">
+                            Contact {!form.contactId && <span className="text-danger small">required*</span>}
                         </label>
-
-
-                        {/* Debounced omnibox-backed picker; stores ID only */}
                         <ContactPicker
                             value={form.contactId}
-                            onChange={(id) =>
-                                setForm((f) => ({ ...f, contactId: id ?? "" }))}
+                            onChange={(id) => setForm((f) => ({ ...f, contactId: id ?? "" }))}
                         />
                     </div>
 
-                    <div className="col-md-3">
-                        <label className="form-label">Price</label>
-                        <input
-                            className="form-control"
-                            inputMode="decimal"
-                            value={form.priceAmount}
-                            onChange={(e) => setForm((f) => ({ ...f, priceAmount: e.target.value }))}
-                        />
-                    </div>
-                    <div className="col-md-2">
-                        <label className="form-label">Currency</label>
-                        <input
-                            className="form-control"
-                            value={form.priceCurrency}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, priceCurrency: e.target.value.toUpperCase() }))
-                            }
+                    {/* Price – self-contained. It writes form.price directly and can prefill from server */}
+                    <div className="col-md-4">
+                        <PriceField<ListingForm>
+                            form={form}
+                            setForm={setForm}
+                            name="price"
+                            value={data?.listing?.price ?? null} // may be Decimal | string – handled inside
+                            required={true}                      // price is REQUIRED by your CreateListingInput
+                            className="mb-2"
                         />
                     </div>
 
                     <div className="col-12">
-                        <button className="btn btn-primary"
-                                type="submit"
-                                disabled={isSaving() || !isValid()}
+                        <button
+                            className="btn btn-primary"
+                            type="submit"
+                            disabled={busy || (isNew ? !validCreate : !validUpdate)}
                         >
-                            {creating || updating ? "Saving…" : "Save"}
+                            {busy ? "Saving…" : "Save"}
                         </button>
                     </div>
                 </div>

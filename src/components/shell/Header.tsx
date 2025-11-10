@@ -38,10 +38,10 @@ export default function Header() {
     return (
         <header className="position-sticky top-0 bg-light border-bottom" style={{ zIndex: 1030 }}>
             <div className="container-fluid d-flex align-items-center gap-3 py-2">
-                <Link to="/" className="navbar-brand fw-semibold mb-0 text-decoration-none">Omnibox</Link>
+                <Link to="/" className="navbar-brand fw-semibold mb-0 text-decoration-none">Search:</Link>
 
                 {/* Professional pill-styled search with outside-click close */}
-                <div className="flex-grow-1" style={{ maxWidth: 720 }}>
+                <div className="flex-grow-1 py-2 ps-5" style={{ maxWidth: 720 }}>
                     <OmniboxSearchBar onPick={handlePick} />
                 </div>
             </div>

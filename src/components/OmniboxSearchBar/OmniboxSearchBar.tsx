@@ -36,7 +36,7 @@ function XIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function OmniboxSearchBar({
-                                             placeholder = "Search… contacts, listings, transactions",
+                                             placeholder = "contacts, listings, transactions",
                                              limitPerGroup = 5,
                                              onPick,
                                          }: Props) {
@@ -169,7 +169,7 @@ export default function OmniboxSearchBar({
     const recomputeDropdown = () => {
         const labelW = labelRef.current?.offsetWidth ?? 0;
         const inputW = inputRef.current?.offsetWidth ?? 0;
-        setDropDims({ left: labelW - 40, width: inputW + 80 });
+        setDropDims({ left: labelW - 30, width: inputW + 60 });
     };
     useLayoutEffect(() => {
         if (!open) return;
@@ -206,9 +206,9 @@ export default function OmniboxSearchBar({
                     className="input-group-text bg-white border-end-0 rounded-start-pill omnibox-label"
                     aria-label="Search"
                 >
-          <SearchHouseIcon className="me-1" />
-          <span className="visually-hidden">Search</span>
-        </span>
+                  <SearchHouseIcon className="me-1" />
+                  <span className="visually-hidden">Search</span>
+                </span>
 
                 {/* The input: when clear button is visible, remove right rounding to keep pill shape consistent */}
                 <input
@@ -241,7 +241,7 @@ export default function OmniboxSearchBar({
           {hasText && (
               <button
                   type="button"
-                  className="btn btn-link text-muted px-3 py-2 omnibox-clear-btn"
+                  className={clsx("btn btn-link text-muted px-3 py-2 omnibox-clear-btn", hasText && "is-visible")}
                   onClick={clear}
                   aria-label="Clear search"
                   title="Clear"
@@ -253,29 +253,29 @@ export default function OmniboxSearchBar({
             </div>
 
             {/* Dropdown: category header + records on next lines */}
-            {open && (
+            {open && grouped && grouped.length > 0 && (
                 <div
                     id="omnibox-dropdown"
                     ref={listRef}
-                    className={clsx("dropdown-menu show shadow-sm mt-1 omnibox-menu")}
+                    className={clsx("dropdown-menu show shadow-sm mt-0 omnibox-menu")}
                     style={{
                         position: "absolute",
                         left: dropDims.left,
                         width: dropDims.width,
-                        maxHeight: 460,
+                        maxHeight: 360,
                         overflow: "auto",
                     }}
                     role="listbox"
                 >
-                    {loading && <div className="dropdown-item text-muted">Searching…</div>}
+                    {loading && <div className="dropdown-item text-muted">...</div>}
 
                     {!loading && dq && grouped.length === 0 && (
                         <div className="dropdown-item text-muted">No results</div>
                     )}
 
                     {!loading &&
-                        grouped.map((g, gi) => (
-                            <div key={g.kind} className="py-1">
+                        grouped.map((g, gi) => {
+                            return <>{g.rows && g.label && <div key={g.kind} className="py-0">
                                 <div className="dropdown-header text-uppercase small">{g.label}</div>
                                 {g.rows.map((x, ri) => {
                                     const flatIdx = indexFor(gi, ri);
@@ -300,8 +300,8 @@ export default function OmniboxSearchBar({
                                         </button>
                                     );
                                 })}
-                            </div>
-                        ))}
+                            </div>}</>
+                    })}
                 </div>
             )}
         </div>
