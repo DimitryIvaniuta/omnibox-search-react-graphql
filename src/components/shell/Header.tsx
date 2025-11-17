@@ -1,6 +1,7 @@
 // src/components/Header.tsx
 import { Link, useNavigate } from "react-router-dom";
 import OmniboxSearchBar from "@/components/OmniboxSearchBar/OmniboxSearchBar";
+import {logSearchPick} from "@/utils/searchAnalytics";
 
 // If your OmniboxSearchBar exports a type, you can import it:
 //   import type { OmniboxPick } from "@/components/OmniboxSearchBar";
@@ -33,6 +34,13 @@ export default function Header() {
                 nav("/");
                 break;
         }
+
+        // 2) Non-blocking analytics call (secondary concern).
+        // We *don't* await – UX must stay snappy even if BFF is slow.
+        void logSearchPick({
+            kind: hit.kind,
+            entityId: hit.id,
+        });
     };
 
     return (

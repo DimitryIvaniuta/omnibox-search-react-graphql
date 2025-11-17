@@ -15,6 +15,9 @@ const Sidebar = ()=> {
                     <NavLink to="/contacts" className={link} end>Contacts</NavLink>
                     <NavLink to="/listings" className={link} end>Listings</NavLink>
                     <NavLink to="/transactions" className={link} end>Transactions</NavLink>
+                    <NavLink to="/ops/search-analytics" className={link} end>
+                        Search analytics
+                    </NavLink>
                 </div>
             </nav>
         </aside>

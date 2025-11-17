@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node ./dev-with-links.mjs",
+    "devold": "node ./dev-with-links.mjs",
+    "dev:web": "node ./dev-with-links.mjs",
+    "dev:bff": "npm --prefix bff-search-analytics run dev",
+    "dev": "concurrently -n web,bff -c green,blue \"npm run dev:web\" \"npm run dev:bff\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

@@ -7,6 +7,7 @@ import TransactionsPage from "@/pages/TransactionsPage";
 import ContactEditor from "@/pages/ContactEditor";
 import ListingEditor from "@/pages/ListingEditor";
 import TransactionEditor from "@/pages/TransactionEditor";
+import SearchAnalyticsPage from "@/pages/SearchAnalyticsPage";
 
 /**
  * Two layout trees:
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
             { path: "contacts", element: <ContactsPage /> },
             { path: "listings", element: <ListingsPage /> },
             { path: "transactions", element: <TransactionsPage /> },
+            {
+                path: "/ops/search-analytics",
+                element: <SearchAnalyticsPage />,
+            }
             // create flows are full-screen too (optional): you can move "new" below FullscreenLayout if desired
         ],
     },
