@@ -84,5 +84,6 @@ const ChatInbox = ({users, messages}: ChatInboxProps) => {
             }
         </div>
     );
+};
 
-}
+export default ChatInbox;
