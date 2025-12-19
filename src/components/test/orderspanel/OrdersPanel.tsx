@@ -42,7 +42,54 @@ const OrderPanel = ({apiBaseUrl, mode}: OrdersPanelProps) => {
         return (
             <div style={{maxWidth: 720}}>
                 <h3>Orders</h3>
-
+                <table
+                    width="100%"
+                    cellPadding={8}
+                    style={{borderCollapse: 'collapse'}}
+                >
+                    <thead>
+                        <tr>
+                            <th align="left">#</th>
+                            <th align="left">Customer</th>
+                            <th align="left">Total</th>
+                            <th align="left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {
+                        orders.map((order)=> {
+                            return (
+                                <tr key={order.id} style={{borderTop: '1px solid #ddd'}}>
+                                    <td>{order.id}</td>
+                                    <td>{order.customerName}</td>
+                                    <td align="right">
+                                        {(order.totalClients / 100).toFixed(2)}
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={order.status}
+                                            onChange={(e)=>
+                                                onChangeStatus(order.id, e.target.value as OrderStatus)}
+                                        >
+                                            {
+                                                Object.values(OrderStatus).map(
+                                                    (status)=> {
+                                                        return (
+                                                            <option value={status} key={status}>
+                                                                {status}
+                                                            </option>
+                                                        );
+                                                    }
+                                                )
+                                            }
+                                        </select>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    }
+                    </tbody>
+                </table>
             </div>
         );
 
