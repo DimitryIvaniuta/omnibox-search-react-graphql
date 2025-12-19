@@ -25,3 +25,4 @@ const useDidUpdateCustom = (
     }, deps);
 
 };
+export default useDidUpdateCustom;
